@@ -11,6 +11,7 @@ import { PRODUCT_BOUNDARY } from "../constants";
 import { useMemolens } from "../state/context";
 import { revokePlaybackUrl, stopMediaStream, type RecordingHandle } from "../services/media";
 import { researchLogger } from "../services/researchLogger";
+import { getNextScheduledDate } from "../services/schedule";
 import type { MedicationEvent } from "../types";
 
 export function TestPage() {
@@ -97,10 +98,7 @@ export function TestPage() {
   const scheduledTimeMs = () => {
     const routine = state.routines.find((item) => item.id === state.activeRoutineId);
     if (!routine) return Date.now();
-    const [hours, minutes] = routine.scheduledTime.split(":").map(Number);
-    const date = new Date();
-    date.setHours(hours, minutes, 0, 0);
-    return date.getTime();
+    return getNextScheduledDate(routine)?.getTime() ?? Date.now();
   };
 
   const cancelPreflight = () => {

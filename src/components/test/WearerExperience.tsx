@@ -16,19 +16,13 @@ import {
   type RecordingHandle,
 } from "../../services/media";
 import { researchLogger } from "../../services/researchLogger";
+import { getNextScheduledDate } from "../../services/schedule";
 import type { CaptureStatus, MedicationEvent } from "../../types";
 
 interface WearerExperienceProps {
   stream: MediaStream | null;
   recorderRef: RefObject<RecordingHandle | null>;
   onStreamChange: (stream: MediaStream | null) => void;
-}
-
-function scheduledDate(time: string): Date {
-  const [hours, minutes] = time.split(":").map(Number);
-  const date = new Date();
-  date.setHours(hours, minutes, 0, 0);
-  return date;
 }
 
 function formatClock(date: Date): string {
@@ -63,7 +57,7 @@ export function WearerExperience({
   const [targetTime] = useState(() =>
     state.testIntent === "run_now"
       ? new Date(Date.now() + 5000)
-      : scheduledDate(activeRoutine.scheduledTime),
+      : getNextScheduledDate(activeRoutine) ?? new Date(Date.now() + 5000),
   );
 
   const clearTimers = useCallback(() => {

@@ -21,17 +21,11 @@ import {
 import { useMemolens } from "../../state/context";
 import { playPrompt, stopMediaStream } from "../../services/media";
 import { researchLogger } from "../../services/researchLogger";
-import type { Routine, TestIntent } from "../../types";
+import { getNextScheduledDate, WEEKDAYS } from "../../services/schedule";
+import type { Routine, TestIntent, Weekday } from "../../types";
 
 interface CaregiverSetupProps {
   onPrepare: (intent: TestIntent) => void;
-}
-
-function todayAt(time: string): Date {
-  const [hours, minutes] = time.split(":").map(Number);
-  const date = new Date();
-  date.setHours(hours, minutes, 0, 0);
-  return date;
 }
 
 export function CaregiverSetup({ onPrepare }: CaregiverSetupProps) {
@@ -67,8 +61,16 @@ export function CaregiverSetup({ onPrepare }: CaregiverSetupProps) {
       setError("Add a caregiver-approved prompt.");
       return false;
     }
-    if (intent === "scheduled" && todayAt(activeRoutine.scheduledTime).getTime() <= Date.now() + 3000) {
-      setError("Choose a scheduled time at least a few seconds in the future.");
+    if (
+      intent === "scheduled" &&
+      activeRoutine.scheduleMode === "specific_days" &&
+      activeRoutine.daysOfWeek.length === 0
+    ) {
+      setError("Select at least one day for this routine.");
+      return false;
+    }
+    if (intent === "scheduled" && !getNextScheduledDate(activeRoutine)) {
+      setError("Choose a valid scheduled time.");
       return false;
     }
     return true;
@@ -257,9 +259,21 @@ export function CaregiverSetup({ onPrepare }: CaregiverSetupProps) {
           />
         </div>
         <div className="field">
-          <label htmlFor="routine-day">Day</label>
-          <select id="routine-day" value="today" disabled>
-            <option value="today">Today</option>
+          <label htmlFor="routine-schedule-mode">Schedule</label>
+          <select
+            id="routine-schedule-mode"
+            value={activeRoutine.scheduleMode}
+            onChange={(event) => {
+              const scheduleMode = event.target.value as Routine["scheduleMode"];
+              updateRoutine({
+                scheduleMode,
+                daysOfWeek:
+                  scheduleMode === "every_day" ? [] : activeRoutine.daysOfWeek,
+              });
+            }}
+          >
+            <option value="every_day">Every day</option>
+            <option value="specific_days">Specific days of the week</option>
           </select>
         </div>
         <div className="field">
@@ -271,7 +285,40 @@ export function CaregiverSetup({ onPrepare }: CaregiverSetupProps) {
             onChange={(event) => updateRoutine({ scheduledTime: event.target.value })}
           />
         </div>
-        <div className="field span-two">
+        {activeRoutine.scheduleMode === "specific_days" ? (
+          <div className="field span-two">
+            <label>Select days</label>
+            <div className="routine-tabs" role="group" aria-label="Select routine days">
+              {WEEKDAYS.map((day) => {
+                const selected = activeRoutine.daysOfWeek.includes(day.value);
+
+                return (
+                  <button
+                    className={selected ? "routine-tab active" : "routine-tab"}
+                    type="button"
+                    key={day.value}
+                    aria-pressed={selected}
+                    onClick={() => {
+                      const nextDays: Weekday[] = selected
+                        ? activeRoutine.daysOfWeek.filter(
+                            (value) => value !== day.value,
+                          )
+                        : [...activeRoutine.daysOfWeek, day.value];
+
+                      updateRoutine({ daysOfWeek: nextDays });
+                    }}
+                  >
+                    {day.shortLabel}
+                  </button>
+                );
+              })}
+            </div>
+            <span className="field-hint">
+              Choose one or more weekdays for this routine.
+            </span>
+          </div>
+        ) : null}
+<div className="field span-two">
           <label htmlFor="routine-prompt">Typed caregiver-approved prompt</label>
           <textarea
             id="routine-prompt"
@@ -326,6 +373,7 @@ export function CaregiverSetup({ onPrepare }: CaregiverSetupProps) {
             <option value={30}>30 seconds</option>
             <option value={45}>45 seconds</option>
             <option value={60}>60 seconds</option>
+            <option value={90}>90 seconds</option>
           </select>
         </div>
         <div className="field">
@@ -342,7 +390,13 @@ export function CaregiverSetup({ onPrepare }: CaregiverSetupProps) {
             <option value={0}>0</option>
             <option value={1}>1</option>
             <option value={2}>2</option>
+            <option value={3}>3</option>
+            <option value={4}>4</option>
+            <option value={5}>5</option>
           </select>
+          <span className="field-hint">
+            Repeats occur every 15 seconds and stop when the recording ends.
+          </span>
         </div>
         <div className="field">
           <label htmlFor="preferred-camera">Preferred camera</label>
@@ -363,16 +417,15 @@ export function CaregiverSetup({ onPrepare }: CaregiverSetupProps) {
         <summary>Research test details</summary>
         <div className="research-meta-grid">
           <div className="field">
-            <label htmlFor="participant-code">Anonymous participant code</label>
+            <label htmlFor="participant-code">Anonymous test code</label>
             <input
               id="participant-code"
               value={state.participantCode}
-              maxLength={40}
-              onChange={(event) =>
-                dispatch({ type: "SET_TEST_METADATA", participantCode: event.target.value })
-              }
+              readOnly
             />
-            <span className="field-hint">Use a study code, not a person’s name.</span>
+            <span className="field-hint">
+              Automatically generated for this test. No name or personal identifier is used.
+            </span>
           </div>
           <div className="field">
             <label htmlFor="participant-type">Participant type</label>

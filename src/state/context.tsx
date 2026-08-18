@@ -7,6 +7,7 @@ import {
   useReducer,
 } from "react";
 import {
+  createAnonymousTestCode,
   createDefaultRoutine,
   EMPTY_OBSERVATIONS,
   WORKFLOW_RANK,
@@ -78,7 +79,7 @@ export function createInitialState(): MemolensState {
     testConsentComplete: false,
     routines: [routine],
     activeRoutineId: routine.id,
-    participantCode: "DEMO-001",
+    participantCode: createAnonymousTestCode(),
     participantType: "family_caregiver",
     testCondition: "clear_role_played_routine",
     preflight: initialPreflight(),

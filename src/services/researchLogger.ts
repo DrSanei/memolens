@@ -141,6 +141,14 @@ class ResearchLogger {
     return this.sessionId;
   }
 
+  startNewTestSession(): string {
+    this.sessionId = createId();
+    this.sequence = 0;
+    this.viewed.clear();
+    this.failureQueued = false;
+    return this.sessionId;
+  }
+
   getConsent(): "unknown" | "allowed" | "declined" {
     return this.consent;
   }

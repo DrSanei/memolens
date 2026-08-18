@@ -36,12 +36,30 @@ export function defaultScheduledTime(): string {
   return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 }
 
+export function createAnonymousTestCode(): string {
+  const now = new Date();
+  const datePart = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0"),
+  ].join("");
+
+  const randomPart = crypto
+    .randomUUID()
+    .replaceAll("-", "")
+    .slice(0, 8)
+    .toUpperCase();
+
+  return `MEM-${datePart}-${randomPart}`;
+}
+
 export function createDefaultRoutine(index = 1): Routine {
   return {
     id: crypto.randomUUID(),
     label: index === 1 ? "Morning medication routine" : `Medication routine ${index}`,
     scheduledTime: defaultScheduledTime(),
-    day: "today",
+    scheduleMode: "every_day",
+    daysOfWeek: [],
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
     typedPrompt: DEFAULT_PROMPT,
     promptType: "typed",

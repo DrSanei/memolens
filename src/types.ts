@@ -37,11 +37,23 @@ export type ParticipantType =
 
 export type CameraPreference = "environment" | "user";
 
+export type Weekday =
+  | "monday"
+  | "tuesday"
+  | "wednesday"
+  | "thursday"
+  | "friday"
+  | "saturday"
+  | "sunday";
+
+export type ScheduleMode = "every_day" | "specific_days";
+
 export interface Routine {
   id: string;
   label: string;
   scheduledTime: string;
-  day: "today";
+  scheduleMode: ScheduleMode;
+  daysOfWeek: Weekday[];
   timezone: string;
   typedPrompt: string;
   promptType: "typed" | "caregiver_voice";

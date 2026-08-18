@@ -32,6 +32,7 @@ export function TestConsentGate() {
       setShowError(true);
       return;
     }
+    researchLogger.startNewTestSession();
     const now = new Date().toISOString();
     dispatch({ type: "SET_TEST_CONSENT", value: true });
     dispatch({ type: "SET_WORKFLOW", step: "caregiver_setup" });
