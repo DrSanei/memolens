@@ -15,7 +15,7 @@ export const PRODUCT_BOUNDARY =
   "Memolens is a supervised research prototype. It supports caregiver review but does not provide medication instructions or verify ingestion.";
 
 export const DEFAULT_PROMPT =
-  "It’s time for your scheduled routine. Please follow the plan prepared for you.";
+  "Hi Mom, it’s time for your medication. Please go ahead and take your pills.";
 
 export const WORKFLOW_RANK: Record<WorkflowStep, number> = {
   consent: 0,
