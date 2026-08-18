@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Memolens</title>
+    <script>
+      (function () {
+        var parts = location.pathname.split("/").filter(Boolean);
+        var base = parts.length > 1 ? "/" + parts[0] + "/" : "/";
+        sessionStorage.setItem(
+          "memolens_spa_redirect",
+          location.pathname + location.search + location.hash,
+        );
+        location.replace(base);
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>

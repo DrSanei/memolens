@@ -1,0 +1,4 @@
+project_id = "memolens-local"
+
+[functions.ingest]
+verify_jwt = false
