@@ -350,7 +350,19 @@ export function KpiPage() {
         setAuth("unavailable");
         setUnavailableMessage("The private KPI environment variables are not configured yet.");
       } else {
-        setError("The dashboard data could not be refreshed. Existing values, if any, are kept on screen.");
+        const data =
+          typeof caught === "object" && caught && "data" in caught
+            ? (caught as { data?: { message?: string; failed_dataset?: string } }).data
+            : undefined;
+
+        // The login/session is valid; only the research data read failed.
+        // Move out of the initial auth-checking state so the recoverable
+        // "Dashboard data unavailable" screen can render.
+        setAuth("authenticated");
+        setError(
+          data?.message ||
+            "The dashboard data could not be refreshed. Check the Supabase server key and applied database migrations.",
+        );
       }
     } finally {
       setLoading(false);
@@ -415,12 +427,45 @@ export function KpiPage() {
   }
 
   if (!summary) {
+    if (loading) {
+      return (
+        <main className="kpi-login-page">
+          <section className="kpi-login-card kpi-checking">
+            <RefreshCw className="spin" size={28} />
+            <h1>Loading research signals</h1>
+            <p>Preparing the current KPI view.</p>
+          </section>
+        </main>
+      );
+    }
+
     return (
       <main className="kpi-login-page">
-        <section className="kpi-login-card kpi-checking">
-          <RefreshCw className="spin" size={28} />
-          <h1>Loading research signals</h1>
-          <p>Preparing the current KPI view.</p>
+        <section className="kpi-login-card">
+          <div className="kpi-login-mark">
+            <AlertTriangle size={26} />
+          </div>
+          <p className="eyebrow">Private founder workspace</p>
+          <h1>Dashboard data unavailable</h1>
+          <p className="kpi-login-copy">
+            {error || "The research database could not be read. Your login session is still valid."}
+          </p>
+          <div className="kpi-login-error" role="alert">
+            <AlertTriangle size={16} />
+            <span>
+              This is a data-read/configuration problem, not a password problem. Verify the Supabase server key and that migrations 202608200002 and 202608200003 were applied.
+            </span>
+          </div>
+          <div style={{ display: "grid", gap: 10, marginTop: 16 }}>
+            <button className="button button-primary button-full" type="button" onClick={() => void loadSummary()}>
+              <RefreshCw size={16} />
+              Retry dashboard
+            </button>
+            <button className="button button-secondary button-full" type="button" onClick={() => void logout()}>
+              <LogOut size={16} />
+              Sign out
+            </button>
+          </div>
         </section>
       </main>
     );

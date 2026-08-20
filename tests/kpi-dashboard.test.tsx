@@ -31,4 +31,32 @@ describe("private KPI dashboard", () => {
     expect(route).not.toMatch(/SUPABASE_(?:SERVICE_ROLE|SECRET)_KEY/);
     expect(route).toContain("/api/kpi");
   });
+  it("surfaces a summary read failure instead of remaining on the loading screen", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ configured: true, authenticated: true }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: async () => ({
+          error_code: "kpi_query_failed",
+          failed_dataset: "test_sessions",
+          message: "The dashboard could not read test_sessions. Check the deployed Supabase key and database migrations.",
+        }),
+      });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<KpiPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Dashboard data unavailable" })).toBeInTheDocument();
+    });
+    expect(screen.getByRole("button", { name: /retry dashboard/i })).toBeInTheDocument();
+    expect(screen.queryByText("Preparing the current KPI view.")).not.toBeInTheDocument();
+  });
+
 });

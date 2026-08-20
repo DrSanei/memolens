@@ -232,11 +232,10 @@ async function leadCount() {
 
 async function summary() {
   const [sessions, events, errors, leads] = await Promise.all([
-    fetchAll(
-      "test_sessions",
-      "session_id,participant_code,started_at_utc,ended_at_utc,completion_state,furthest_step,zero_touch_success,care_recipient_interaction_count,prompt_delivered,prompt_repeat_count,camera_permission,microphone_permission,recording_status,recording_duration_seconds,privacy_stop,video_review_status,review_duration_seconds,caregiver_disposition,clip_usefulness,prompt_comprehension,false_reassurance,review_burden,privacy_rating,technical_error_code,overall_value_rating,would_consider_use,pilot_interest,feedback_submitted_at_utc,submitted_at_utc",
-      "submitted_at_utc",
-    ),
+    // Use "*" here so the dashboard remains readable across the original,
+    // post-feedback, and care-recipient terminology schema revisions.
+    // Missing newer fields are treated as "not yet recorded" by the KPI logic.
+    fetchAll("test_sessions", "*", "submitted_at_utc"),
     fetchAll("analytics_events", "session_id,event_name,occurred_at_utc", "occurred_at_utc"),
     fetchAll("ingestion_errors", "received_at_utc,error_code,payload_type,session_id", "received_at_utc"),
     leadCount(),
@@ -461,10 +460,22 @@ export default async function handler(req, res) {
 
     return json(res, 404, { ok: false, error_code: "kpi_action_not_found" });
   } catch (error) {
+    const internalMessage = error instanceof Error ? error.message : "";
+    const failedDataset =
+      internalMessage.startsWith("test_sessions:") ? "test_sessions" :
+      internalMessage.startsWith("analytics_events:") ? "analytics_events" :
+      internalMessage.startsWith("ingestion_errors:") ? "ingestion_errors" :
+      internalMessage.startsWith("leads:") ? "leads" :
+      "unknown";
+
     return json(res, 500, {
       ok: false,
       error_code: "kpi_query_failed",
-      message: "The research dashboard could not retrieve the requested data.",
+      failed_dataset: failedDataset,
+      message:
+        failedDataset === "unknown"
+          ? "The research dashboard could not retrieve the requested data."
+          : `The dashboard could not read ${failedDataset}. Check the deployed Supabase key and database migrations.`,
     });
   }
 }
