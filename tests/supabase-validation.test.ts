@@ -52,7 +52,7 @@ function session(sessionId: string): TestSessionRecord {
     completion_state: "acknowledged_closed",
     furthest_step: "acknowledged_closed",
     zero_touch_success: true,
-    wearer_interaction_count: 0,
+    care_recipient_interaction_count: 0,
     prompt_type: "typed",
     prompt_delivered: true,
     prompt_repeat_count: 1,

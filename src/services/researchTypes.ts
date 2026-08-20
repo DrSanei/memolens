@@ -37,7 +37,7 @@ export interface TestSessionRecord {
   completion_state: string;
   furthest_step: string;
   zero_touch_success: boolean | null;
-  wearer_interaction_count: number;
+  care_recipient_interaction_count: number;
   prompt_type: string;
   prompt_delivered: boolean;
   prompt_repeat_count: number;
@@ -58,6 +58,11 @@ export interface TestSessionRecord {
   privacy_rating: number | null;
   technical_error_code: string | null;
   research_notes: string | null;
+  overall_value_rating?: number | null;
+  would_consider_use?: "yes" | "maybe" | "no" | null;
+  pilot_interest?: "yes" | "maybe" | "no" | null;
+  feedback_text?: string | null;
+  feedback_submitted_at_utc?: string | null;
   research_consent_version: string;
   submitted_at_utc: string;
 }
@@ -66,9 +71,13 @@ export interface LeadRecord {
   schema_version: string;
   lead_id: string;
   submitted_at_utc: string;
-  name: string;
-  phone_country_code: string;
-  phone_number: string;
+  name: string | null;
+
+  phone_country_code: string | null;
+
+  phone_number: string | null;
+
+  email?: string | null;
   role_interest: string;
   source_cta: string;
   contact_consent: true;

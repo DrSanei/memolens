@@ -1,4 +1,4 @@
-import { ArrowLeft, CircleAlert, FlaskConical, LockKeyhole } from "lucide-react";
+﻿import { ArrowLeft, CircleAlert, FlaskConical, LockKeyhole } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Brand } from "../components/Brand";
@@ -6,7 +6,7 @@ import { CaregiverReview } from "../components/test/CaregiverReview";
 import { CaregiverSetup } from "../components/test/CaregiverSetup";
 import { Preflight } from "../components/test/Preflight";
 import { TestConsentGate } from "../components/test/TestConsentGate";
-import { WearerExperience } from "../components/test/WearerExperience";
+import { CareRecipientExperience } from "../components/test/CareRecipientExperience";
 import { PRODUCT_BOUNDARY } from "../constants";
 import { useMemolens } from "../state/context";
 import { revokePlaybackUrl, stopMediaStream, type RecordingHandle } from "../services/media";
@@ -64,7 +64,7 @@ export function TestPage() {
     const nowMs = new Date(now).getTime();
     dispatch({ type: "SET_TIMING", changes: { armedAt: now } });
     dispatch({ type: "SET_WORKFLOW", step: "armed" });
-    dispatch({ type: "SET_ROLE", role: "wearer" });
+    dispatch({ type: "SET_ROLE", role: "care_recipient" });
     researchLogger.log("test_armed", {
       roleMode: "caregiver",
       workflowStep: "armed",
@@ -83,15 +83,15 @@ export function TestPage() {
         properties: { countdown_seconds: 5 },
       });
     }
-    researchLogger.log("wearer_mode_entered", {
-      roleMode: "wearer",
+    researchLogger.log("care_recipient_mode_entered", {
+      roleMode: "care_recipient",
       workflowStep: "armed",
       source: "automatic_after_arm",
     });
     researchLogger.logViewOnce(
-      `wearer-ready:${state.activeRoutineId}`,
-      "wearer_ready_viewed",
-      { roleMode: "wearer", workflowStep: "armed" },
+      `care-recipient-ready:${state.activeRoutineId}`,
+      "care_recipient_ready_viewed",
+      { roleMode: "care_recipient", workflowStep: "armed" },
     );
   };
 
@@ -109,7 +109,7 @@ export function TestPage() {
     dispatch({ type: "SET_WORKFLOW", step: "caregiver_setup" });
   };
 
-  const switchRole = (role: "caregiver" | "wearer") => {
+  const switchRole = (role: "caregiver" | "care_recipient") => {
     if (role === state.role) return;
     if (role === "caregiver" && !state.activeEventId) return;
     dispatch({ type: "SET_ROLE", role });
@@ -121,8 +121,8 @@ export function TestPage() {
         source: "device_handoff",
       });
     } else {
-      researchLogger.log("wearer_mode_entered", {
-        roleMode: "wearer",
+      researchLogger.log("care_recipient_mode_entered", {
+        roleMode: "care_recipient",
         workflowStep: state.workflow,
         source: "caregiver_role_control",
       });
@@ -166,7 +166,7 @@ export function TestPage() {
     dispatch({ type: "CLEAR_SESSION" });
   };
 
-  const wearerEligible = [
+  const careRecipientEligible = [
     "armed",
     "capture_starting",
     "recording",
@@ -184,7 +184,7 @@ export function TestPage() {
   })();
 
   return (
-    <div className={state.role === "wearer" ? "test-shell wearer-mode-shell" : "test-shell"}>
+    <div className={state.role === "care_recipient" ? "test-shell care-recipient-mode-shell" : "test-shell"}>
       <header className="test-header">
         <div className="test-header-inner">
           <Brand />
@@ -195,19 +195,19 @@ export function TestPage() {
                 type="button"
                 className={state.role === "caregiver" ? "active" : ""}
                 aria-pressed={state.role === "caregiver"}
-                disabled={state.role === "wearer" && !state.activeEventId}
+                disabled={state.role === "care_recipient" && !state.activeEventId}
                 onClick={() => switchRole("caregiver")}
               >
                 Caregiver
               </button>
               <button
                 type="button"
-                className={state.role === "wearer" ? "active" : ""}
-                aria-pressed={state.role === "wearer"}
-                disabled={!wearerEligible}
-                onClick={() => switchRole("wearer")}
+                className={state.role === "care_recipient" ? "active" : ""}
+                aria-pressed={state.role === "care_recipient"}
+                disabled={!careRecipientEligible}
+                onClick={() => switchRole("care_recipient")}
               >
-                Wearer
+                Care recipient
               </button>
             </div>
           </div>
@@ -242,11 +242,12 @@ export function TestPage() {
             onCancel={cancelPreflight}
           />
         ) : null}
-        {state.role === "wearer" && wearerEligible ? (
-          <WearerExperience
+        {state.role === "care_recipient" && careRecipientEligible ? (
+          <CareRecipientExperience
             stream={captureStream}
             recorderRef={recorderRef}
             onStreamChange={setCaptureStream}
+            onReturnToCaregiver={() => switchRole("caregiver")}
           />
         ) : null}
         {state.role === "caregiver" &&
@@ -259,7 +260,7 @@ export function TestPage() {
         {statusMessage}
       </div>
       <footer className="test-footer">
-        <LockKeyhole size={15} /> Media exists only in this tab’s memory and is erased on
+        <LockKeyhole size={15} /> Media exists only in this tabâ€™s memory and is erased on
         refresh or close.
       </footer>
     </div>

@@ -11,9 +11,10 @@ import {
   ShieldCheck,
   Trash2,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ANALYTICS_CONSENT_VERSION,
+  CONTACT_CONSENT_VERSION,
   SCHEMA_VERSION,
 } from "../../constants";
 import {
@@ -22,6 +23,7 @@ import {
 } from "../../state/context";
 import {
   researchLogger,
+  type LeadRecord,
   type TestSessionRecord,
 } from "../../services/researchLogger";
 import type {
@@ -37,20 +39,42 @@ interface CaregiverReviewProps {
 }
 
 const DISPOSITIONS: Array<{ value: CaregiverDisposition; label: string }> = [
-  { value: "appears_completed", label: "Appears completed" },
-  { value: "uncertain_follow_up", label: "Uncertain—follow up" },
-  { value: "wearer_requested_help", label: "Wearer requested help" },
-  { value: "no_usable_evidence", label: "No usable evidence" },
+  { value: "appears_completed", label: "Routine appears completed" },
+  { value: "uncertain_follow_up", label: "Needs follow-up" },
+  { value: "care_recipient_requested_help", label: "Care recipient asked for help" },
+  { value: "no_usable_evidence", label: "Memo was not clear enough" },
   { value: "false_alert", label: "False alert" },
-  { value: "technical_failure", label: "Technical failure" },
+  { value: "technical_failure", label: "Technical issue" },
 ];
 
 const CAPTURE_LABELS: Record<MedicationEvent["captureStatus"], string> = {
-  evidence_available: "Evidence available",
-  capture_incomplete: "Capture incomplete",
-  capture_unavailable: "Capture unavailable",
-  stopped_by_wearer: "Stopped by wearer",
+  evidence_available: "Memo ready",
+  capture_incomplete: "Memo incomplete",
+  capture_unavailable: "Memo unavailable",
+  stopped_by_care_recipient: "Stopped by care recipient",
 };
+
+type FeedbackChoice = "" | "yes" | "maybe" | "no";
+type FeedbackSaveStatus = "idle" | "saving" | "saved" | "failed";
+
+interface PostTestFeedbackPayload {
+  overallValueRating: number;
+  wouldConsiderUse: Exclude<FeedbackChoice, "">;
+  pilotInterest: Exclude<FeedbackChoice, "">;
+  feedbackText: string;
+  submittedAtUtc: string;
+}
+
+const ROLE_INTEREST_LABELS: Record<MemolensState["participantType"], string> = {
+  family_caregiver: "Family caregiver",
+  professional_caregiver: "Professional caregiver",
+  healthcare_professional: "Healthcare professional",
+  researcher: "Researcher",
+  potential_partner: "Potential partner",
+  other: "Other",
+};
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function secondsBetween(start?: string, end?: string): number {
   if (!start || !end) return 0;
@@ -62,6 +86,7 @@ export function buildTestSessionRecord(
   routine: Routine,
   event: MedicationEvent,
   completionState: "caregiver_review" | "left_open" | "acknowledged_closed",
+  feedback?: PostTestFeedbackPayload,
 ): TestSessionRecord {
   const submittedAt = new Date().toISOString();
   const reviewEnd = state.timing.reviewEndedAt ?? submittedAt;
@@ -81,7 +106,7 @@ export function buildTestSessionRecord(
         : state.observations.zeroTouchSuccess === "no"
           ? false
           : null,
-    wearer_interaction_count: state.observations.wearerInteractionCount,
+    care_recipient_interaction_count: state.observations.careRecipientInteractionCount,
     prompt_type: routine.promptType,
     prompt_delivered: event.promptDelivered,
     prompt_repeat_count: event.promptRepeatCount,
@@ -105,6 +130,15 @@ export function buildTestSessionRecord(
     technical_error_code:
       event.technicalErrors.join("|").slice(0, 300) || null,
     research_notes: state.observations.researchNotes.slice(0, 1000) || null,
+    ...(feedback
+      ? {
+          overall_value_rating: feedback.overallValueRating,
+          would_consider_use: feedback.wouldConsiderUse,
+          pilot_interest: feedback.pilotInterest,
+          feedback_text: feedback.feedbackText || null,
+          feedback_submitted_at_utc: feedback.submittedAtUtc,
+        }
+      : {}),
     research_consent_version:
       state.analyticsConsent === "allowed" ? ANALYTICS_CONSENT_VERSION : "",
     submitted_at_utc: submittedAt,
@@ -135,8 +169,8 @@ function VideoEvidence({
       <div className="no-video-panel">
         <CircleAlert size={24} />
         <div>
-          <strong>Capture unavailable</strong>
-          <span>No video was created for this event.</span>
+          <strong>Memo unavailable</strong>
+          <span>No Memo was created for this support moment.</span>
         </div>
       </div>
     );
@@ -159,9 +193,56 @@ function VideoEvidence({
   );
 }
 
+function ChoiceQuestion({
+  legend,
+  value,
+  onChange,
+}: {
+  legend: string;
+  value: FeedbackChoice;
+  onChange: (value: Exclude<FeedbackChoice, "">) => void;
+}) {
+  const options: Array<{
+    value: Exclude<FeedbackChoice, "">;
+    label: string;
+  }> = [
+    { value: "yes", label: "Yes" },
+    { value: "maybe", label: "Maybe" },
+    { value: "no", label: "No" },
+  ];
+
+  return (
+    <fieldset className="feedback-question">
+      <legend>{legend}</legend>
+      <div className="choice-row">
+        {options.map((option) => (
+          <button
+            className={value === option.value ? "choice-button selected" : "choice-button"}
+            type="button"
+            key={option.value}
+            aria-pressed={value === option.value}
+            onClick={() => onChange(option.value)}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
 export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverReviewProps) {
   const { state, dispatch, activeRoutine, activeEvent } = useMemolens();
   const [validationError, setValidationError] = useState("");
+  const [postTestValue, setPostTestValue] = useState(0);
+  const [wouldConsiderUse, setWouldConsiderUse] = useState<FeedbackChoice>("");
+  const [pilotInterest, setPilotInterest] = useState<FeedbackChoice>("");
+  const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackEmail, setFeedbackEmail] = useState("");
+  const [feedbackStatus, setFeedbackStatus] = useState<FeedbackSaveStatus>("idle");
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const feedbackStartedAtRef = useRef(0);
+  const feedbackLeadIdRef = useRef(crypto.randomUUID());
 
   const updateVideoStatus = (event: MedicationEvent, status: VideoReviewStatus) => {
     const currentRank = { not_reviewed: 0, started: 1, skipped: 2, completed: 3 }[
@@ -187,6 +268,9 @@ export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverRevi
 
   useEffect(() => {
     if (state.workflow === "acknowledged_closed") {
+      if (feedbackStartedAtRef.current === 0) {
+        feedbackStartedAtRef.current = Date.now();
+      }
       researchLogger.logViewOnce(
         `test-completion:${activeEvent?.id ?? "none"}`,
         "test_completion_viewed",
@@ -226,6 +310,7 @@ export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverRevi
   const submitSession = async (
     completionState: "caregiver_review" | "left_open" | "acknowledged_closed",
     event: MedicationEvent,
+    feedback?: PostTestFeedbackPayload,
   ): Promise<boolean> => {
     if (state.analyticsConsent !== "allowed") {
       dispatch({
@@ -241,7 +326,13 @@ export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverRevi
       message: "Awaiting Supabase confirmation…",
     });
     try {
-      const summary = buildTestSessionRecord(state, activeRoutine, event, completionState);
+      const summary = buildTestSessionRecord(
+        state,
+        activeRoutine,
+        event,
+        completionState,
+        feedback,
+      );
       await researchLogger.submitTestSession(summary);
       dispatch({
         type: "SET_RESEARCH_SAVE",
@@ -268,7 +359,7 @@ export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverRevi
       workflowStep: "caregiver_review",
       properties: {
         zero_touch_success: state.observations.zeroTouchSuccess,
-        wearer_interaction_count: state.observations.wearerInteractionCount,
+        care_recipient_interaction_count: state.observations.careRecipientInteractionCount,
         prompt_comprehension: state.observations.promptComprehension,
         clip_usefulness: state.observations.clipUsefulness,
         false_reassurance: state.observations.falseReassurance,
@@ -286,11 +377,11 @@ export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverRevi
       activeEvent.videoReviewStatus !== "completed" &&
       activeEvent.videoReviewStatus !== "skipped"
     ) {
-      setValidationError("Play the clip to completion or choose “Skip video review” before closing.");
+      setValidationError("Play the Memo to completion or choose “Skip Memo review” before finishing.");
       return;
     }
     if (!activeEvent.caregiverDisposition) {
-      setValidationError("Select a caregiver disposition before closing.");
+      setValidationError("Select a review outcome before finishing.");
       return;
     }
     const acknowledgementAt = new Date().toISOString();
@@ -316,7 +407,110 @@ export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverRevi
     await submitSession("acknowledged_closed", closedEvent);
   };
 
-  const keepOpen = async () => {
+
+  const submitPostTestFeedback = async () => {
+    if (!activeEvent || feedbackStatus === "saving") return;
+    if (
+      postTestValue < 1 ||
+      postTestValue > 5 ||
+      !wouldConsiderUse ||
+      !pilotInterest
+    ) {
+      setFeedbackStatus("failed");
+      setFeedbackMessage("Please answer the three required feedback questions.");
+      return;
+    }
+
+    const email = feedbackEmail.trim().toLowerCase();
+    if (email && !EMAIL_PATTERN.test(email)) {
+      setFeedbackStatus("failed");
+      setFeedbackMessage("Enter a valid email address or leave the email field blank.");
+      return;
+    }
+
+    setFeedbackStatus("saving");
+    setFeedbackMessage("Saving your feedback…");
+
+    const submittedAtUtc = new Date().toISOString();
+    const feedback: PostTestFeedbackPayload = {
+      overallValueRating: postTestValue,
+      wouldConsiderUse,
+      pilotInterest,
+      feedbackText: feedbackText.trim().slice(0, 1000),
+      submittedAtUtc,
+    };
+
+    const feedbackSaved = await submitSession(
+      "acknowledged_closed",
+      activeEvent,
+      feedback,
+    );
+    if (!feedbackSaved) {
+      setFeedbackStatus("failed");
+      setFeedbackMessage(
+        "Your feedback could not be confirmed by the research service. Please retry.",
+      );
+      return;
+    }
+
+    try {
+      if (email) {
+        const lead: LeadRecord = {
+          schema_version: SCHEMA_VERSION,
+          lead_id: feedbackLeadIdRef.current,
+          submitted_at_utc: submittedAtUtc,
+          name: null,
+          phone_country_code: null,
+          phone_number: null,
+          email,
+          role_interest: ROLE_INTEREST_LABELS[state.participantType],
+          source_cta: "post_test_feedback",
+          contact_consent: true,
+          consent_text_version: CONTACT_CONSENT_VERSION,
+        };
+        await researchLogger.submitLead(
+          lead,
+          {
+            honeypot: "",
+            elapsedMs: Math.max(
+              0,
+              Date.now() -
+                (feedbackStartedAtRef.current || Date.now()),
+            ),
+          },
+          "post_test_feedback",
+        );
+      }
+
+      researchLogger.log("post_test_feedback_submitted", {
+        roleMode: "caregiver",
+        workflowStep: "acknowledged_closed",
+        source: "post_test_questionnaire",
+        properties: {
+          overall_value_rating: postTestValue,
+          would_consider_use: wouldConsiderUse,
+          pilot_interest: pilotInterest,
+          email_provided: Boolean(email),
+        },
+      });
+      await researchLogger.flush();
+
+      setFeedbackStatus("saved");
+      setFeedbackMessage(
+        email
+          ? "Thank you. Your feedback and contact interest were confirmed."
+          : state.analyticsConsent === "allowed"
+            ? "Thank you. Your anonymous feedback was confirmed."
+            : "Thank you. Anonymous research storage was declined, so the feedback remained on this device.",
+      );
+    } catch {
+      setFeedbackStatus("failed");
+      setFeedbackMessage(
+        "Your test feedback was saved, but contact information was not confirmed. Please retry.",
+      );
+    }
+  };
+    const keepOpen = async () => {
     if (!activeEvent) return;
     dispatch({ type: "UPDATE_EVENT", id: activeEvent.id, changes: { closed: false } });
     dispatch({ type: "SET_WORKFLOW", step: "caregiver_inbox" });
@@ -367,6 +561,123 @@ export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverRevi
             <RotateCcw size={18} /> Retry research summary
           </button>
         ) : null}
+
+        <div className="post-test-feedback" aria-labelledby="post-test-feedback-title">
+          <div className="post-test-feedback-heading">
+            <p className="eyebrow">Quick feedback</p>
+            <h2 id="post-test-feedback-title">Help us improve Memolens</h2>
+            <p>
+              Three quick questions help us understand usefulness and future interest.
+              Email and written feedback are optional.
+            </p>
+          </div>
+
+          {feedbackStatus === "saved" ? (
+            <div className="feedback-thank-you" role="status">
+              <ShieldCheck size={22} />
+              <div>
+                <strong>Feedback received</strong>
+                <span>{feedbackMessage}</span>
+              </div>
+            </div>
+          ) : (
+            <div className="feedback-grid">
+              <fieldset className="feedback-question">
+                <legend>
+                  Overall, how valuable would a system like Memolens be in your caregiving/work situation?
+                </legend>
+                <div className="rating-row" role="group" aria-label="Overall value rating">
+                  {[1, 2, 3, 4, 5].map((rating) => (
+                    <button
+                      className={postTestValue === rating ? "rating-button selected" : "rating-button"}
+                      type="button"
+                      key={rating}
+                      aria-pressed={postTestValue === rating}
+                      onClick={() => {
+                        setPostTestValue(rating);
+                        setFeedbackStatus("idle");
+                        setFeedbackMessage("");
+                      }}
+                    >
+                      {rating}
+                    </button>
+                  ))}
+                </div>
+                <div className="rating-scale">
+                  <span>Low value</span>
+                  <span>Very valuable</span>
+                </div>
+              </fieldset>
+
+              <ChoiceQuestion
+                legend="Would you consider using Memolens if it became available?"
+                value={wouldConsiderUse}
+                onChange={(value) => {
+                  setWouldConsiderUse(value);
+                  setFeedbackStatus("idle");
+                  setFeedbackMessage("");
+                }}
+              />
+
+              <ChoiceQuestion
+                legend="Would you be interested in a future pilot?"
+                value={pilotInterest}
+                onChange={(value) => {
+                  setPilotInterest(value);
+                  setFeedbackStatus("idle");
+                  setFeedbackMessage("");
+                }}
+              />
+
+              <div className="field">
+                <label htmlFor="post-test-feedback-text">We value your feedback <span className="optional-label">Optional</span></label>
+                <textarea
+                  id="post-test-feedback-text"
+                  rows={3}
+                  maxLength={1000}
+                  value={feedbackText}
+                  onChange={(event) => setFeedbackText(event.target.value)}
+                  placeholder="What was most valuable, or what should we improve?"
+                />
+                <span className="field-hint">
+                  Please do not include names, medications, diagnoses, doses, or other identifying health information.
+                </span>
+              </div>
+
+              <div className="field">
+                <label htmlFor="post-test-email">Your email for future contacts <span className="optional-label">Optional</span></label>
+                <input
+                  id="post-test-email"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  maxLength={254}
+                  value={feedbackEmail}
+                  onChange={(event) => setFeedbackEmail(event.target.value)}
+                  placeholder="you@example.com"
+                />
+                <span className="field-hint">
+                  If you provide an email, you agree that Memolens may contact you about future testing or pilot opportunities.
+                </span>
+              </div>
+
+              {feedbackStatus === "failed" ? (
+                <p className="form-error" role="alert">{feedbackMessage}</p>
+              ) : null}
+
+              <button
+                className="button button-primary feedback-submit"
+                type="button"
+                onClick={submitPostTestFeedback}
+                disabled={feedbackStatus === "saving"}
+              >
+                {feedbackStatus === "saving" ? <LoaderCircle className="spin" size={18} /> : <Check size={18} />}
+                {feedbackStatus === "saving" ? "Saving feedback…" : "Submit feedback"}
+              </button>
+            </div>
+          )}
+        </div>
+
         <div className="completion-actions">
           <button className="button button-primary" type="button" onClick={onClearSession}>
             Start a new safe-prop test
@@ -376,7 +687,7 @@ export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverRevi
             type="button"
             onClick={() => onDeleteEvent(activeEvent)}
           >
-            <Trash2 size={18} /> Delete recording
+            <Trash2 size={18} /> Delete Memo
           </button>
         </div>
       </section>
@@ -389,7 +700,7 @@ export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverRevi
         <div className="workflow-heading-row">
           <div>
             <p className="eyebrow">Caregiver mode</p>
-            <h1 id="inbox-title">Recorded event inbox</h1>
+            <h1 id="inbox-title">Memo inbox</h1>
             <p className="lead-copy">
               Review recorded medication-event evidence and use your own judgment to decide
               whether follow-up is needed.
@@ -403,8 +714,8 @@ export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverRevi
         {state.events.length === 0 ? (
           <div className="empty-inbox">
             <Archive size={30} />
-            <h2>No recorded events</h2>
-            <p>Complete a safe-prop wearer test to create an event package.</p>
+            <h2>No Memos yet</h2>
+            <p>Complete a safe test to create a Memo.</p>
           </div>
         ) : (
           <div className="event-list">
@@ -416,7 +727,7 @@ export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverRevi
                       {CAPTURE_LABELS[event.captureStatus]}
                     </span>
                     <h2>{event.routineLabel}</h2>
-                    <p>Caregiver review required</p>
+                    <p>Memo ready for review</p>
                   </div>
                   <span className="event-time">{formatDateTime(event.startedAt)}</span>
                 </div>
@@ -455,7 +766,7 @@ export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverRevi
                     <Eye size={18} /> Review event
                   </button>
                   <button className="button button-ghost danger-text" type="button" onClick={() => onDeleteEvent(event)}>
-                    <Trash2 size={18} /> Delete recording
+                    <Trash2 size={18} /> Delete Memo
                   </button>
                 </div>
               </article>
@@ -489,7 +800,7 @@ export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverRevi
       </button>
       <div className="review-heading">
         <div>
-          <p className="eyebrow">Caregiver review required</p>
+          <p className="eyebrow">Memo ready for review</p>
           <h1 id="review-title">{activeEvent.routineLabel}</h1>
           <p>
             Recorded {formatDateTime(activeEvent.startedAt)} · {Math.round(activeEvent.durationSeconds)} seconds
@@ -505,10 +816,10 @@ export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverRevi
         onStatus={(status) => updateVideoStatus(activeEvent, status)}
       />
       <button className="text-button skip-video" type="button" onClick={skipVideo}>
-        Skip video review
+        Skip Memo review
       </button>
       <p className="review-gate-status">
-        Video review: <strong>{activeEvent.videoReviewStatus.replaceAll("_", " ")}</strong>
+        Memo review: <strong>{activeEvent.videoReviewStatus.replaceAll("_", " ")}</strong>
       </p>
 
       <div className="review-details-grid">
@@ -517,7 +828,7 @@ export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverRevi
           <strong>{formatDateTime(activeEvent.scheduledAt)}</strong>
         </div>
         <div>
-          <span>Recording window</span>
+          <span>Memo time</span>
           <strong>
             {formatDateTime(activeEvent.startedAt)} – {formatDateTime(activeEvent.endedAt)}
           </strong>
@@ -569,8 +880,8 @@ export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverRevi
       </div>
 
       <fieldset className="disposition-fieldset">
-        <legend>Caregiver disposition</legend>
-        <p>Only caregiver judgment interprets the event.</p>
+        <legend>Review outcome</legend>
+        <p>Memolens does not decide what happened. Review the Memo and choose whether follow-up is needed.</p>
         <div className="disposition-grid">
           {DISPOSITIONS.map((option) => (
             <label key={option.value}>
@@ -605,7 +916,7 @@ export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverRevi
         </summary>
         <div className="observation-form">
           <div className="field">
-            <label htmlFor="zero-touch">Routine completed without required wearer screen interaction?</label>
+            <label htmlFor="zero-touch">Routine completed without required care recipient screen interaction?</label>
             <select
               id="zero-touch"
               value={observation.zeroTouchSuccess}
@@ -622,17 +933,17 @@ export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverRevi
             </select>
           </div>
           <div className="field">
-            <label htmlFor="interaction-count">Number of required wearer interactions</label>
+            <label htmlFor="interaction-count">Number of required care recipient interactions</label>
             <input
               id="interaction-count"
               type="number"
               min={0}
               max={99}
-              value={observation.wearerInteractionCount}
+              value={observation.careRecipientInteractionCount}
               onChange={(event) =>
                 dispatch({
                   type: "SET_OBSERVATIONS",
-                  changes: { wearerInteractionCount: Math.min(99, Math.max(0, Number(event.target.value))) },
+                  changes: { careRecipientInteractionCount: Math.min(99, Math.max(0, Number(event.target.value))) },
                 })
               }
             />
@@ -640,7 +951,7 @@ export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverRevi
           </div>
           <ObservationSelect
             id="prompt-understandable"
-            label="Was the prompt understandable?"
+            label="Was the reminder understandable?"
             value={observation.promptComprehension}
             options={["yes", "no", "unsure"]}
             onChange={(value) =>
@@ -649,7 +960,7 @@ export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverRevi
           />
           <ObservationSelect
             id="clip-useful"
-            label="Was the clip useful?"
+            label="Was the Memo useful?"
             value={observation.clipUsefulness}
             options={["yes", "no", "partly"]}
             onChange={(value) =>
@@ -735,13 +1046,13 @@ export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverRevi
 
       <div className="review-actions">
         <button className="button button-primary" type="button" onClick={closeEvent}>
-          <Check size={18} /> Acknowledge and close
+          <Check size={18} /> Finish review
         </button>
         <button className="button button-secondary" type="button" onClick={keepOpen}>
           Keep open for follow-up
         </button>
         <button className="button button-ghost danger-text" type="button" onClick={() => onDeleteEvent(activeEvent)}>
-          <Trash2 size={18} /> Delete recording
+          <Trash2 size={18} /> Delete Memo
         </button>
       </div>
       <p className="deletion-distinction">

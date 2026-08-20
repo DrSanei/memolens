@@ -15,13 +15,13 @@ describe("Memolens workflow reducer", () => {
       step: "caregiver_setup",
     });
     const armed = memolensReducer(setup, { type: "SET_WORKFLOW", step: "armed" });
-    const wearer = memolensReducer(armed, { type: "SET_ROLE", role: "wearer" });
-    const backToSetup = memolensReducer(wearer, {
+    const careRecipient = memolensReducer(armed, { type: "SET_ROLE", role: "care_recipient" });
+    const backToSetup = memolensReducer(careRecipient, {
       type: "SET_WORKFLOW",
       step: "caregiver_setup",
     });
 
-    expect(wearer.role).toBe("wearer");
+    expect(careRecipient.role).toBe("care_recipient");
     expect(backToSetup.workflow).toBe("caregiver_setup");
     expect(backToSetup.furthestStep).toBe("armed");
   });
@@ -50,8 +50,8 @@ describe("Memolens workflow reducer", () => {
       closed: false,
     };
     const withEvent = memolensReducer(initial, { type: "ADD_EVENT", event });
-    const wearer = memolensReducer(withEvent, { type: "SET_ROLE", role: "wearer" });
-    const caregiver = memolensReducer(wearer, { type: "SET_ROLE", role: "caregiver" });
+    const careRecipient = memolensReducer(withEvent, { type: "SET_ROLE", role: "care_recipient" });
+    const caregiver = memolensReducer(careRecipient, { type: "SET_ROLE", role: "caregiver" });
 
     expect(caregiver.events[0].blob).toBe(blob);
     expect(caregiver.events[0].objectUrl).toBe("blob:test");

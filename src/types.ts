@@ -1,6 +1,6 @@
 export type AnalyticsConsent = "unknown" | "allowed" | "declined";
 
-export type RoleMode = "caregiver" | "wearer";
+export type RoleMode = "caregiver" | "care_recipient";
 
 export type WorkflowStep =
   | "consent"
@@ -61,7 +61,7 @@ export interface Routine {
   voicePromptUrl?: string;
   voicePromptBlob?: Blob;
   maxDurationSeconds: number;
-  repeatDelaySeconds: 15;
+  repeatDelaySeconds: number;
   maxRepeats: number;
   cameraPreference: CameraPreference;
   saved: boolean;
@@ -89,12 +89,12 @@ export type CaptureStatus =
   | "evidence_available"
   | "capture_incomplete"
   | "capture_unavailable"
-  | "stopped_by_wearer";
+  | "stopped_by_care_recipient";
 
 export type CaregiverDisposition =
   | "appears_completed"
   | "uncertain_follow_up"
-  | "wearer_requested_help"
+  | "care_recipient_requested_help"
   | "no_usable_evidence"
   | "false_alert"
   | "technical_failure";
@@ -126,7 +126,7 @@ export interface MedicationEvent {
 
 export interface ResearchObservations {
   zeroTouchSuccess: "" | "yes" | "no";
-  wearerInteractionCount: number;
+  careRecipientInteractionCount: number;
   promptComprehension: "" | "yes" | "no" | "unsure";
   clipUsefulness: "" | "yes" | "no" | "partly";
   falseReassurance: "" | "yes" | "no";

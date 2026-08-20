@@ -23,19 +23,19 @@ const STEPS = [
     number: "01",
     icon: BellRing,
     title: "Set the routine",
-    body: "A caregiver chooses the time and approves the prompt.",
+    body: "A caregiver chooses the time and approves the reminder.",
   },
   {
     number: "02",
     icon: Sparkles,
     title: "Support the moment",
-    body: "Memolens announces the recording, prompts the wearer, and captures a short event window.",
+    body: "Memolens delivers the reminder and creates a private Memo of the support moment.",
   },
   {
     number: "03",
     icon: Eye,
     title: "Review with context",
-    body: "The caregiver reviews the available evidence and decides whether follow-up is needed.",
+    body: "The caregiver reviews the Memo and decides whether follow-up is needed.",
   },
 ];
 
@@ -104,13 +104,13 @@ export function LandingPage() {
         <section ref={heroRef} className="hero-section">
           <div className="container hero-grid">
             <div className="hero-copy">
-              <p className="eyebrow">Medication Assistant for Our Beloved Ones</p>
+              <p className="eyebrow">Real-time memory and safety support</p>
               <h1>Built with care for the moments memory may miss.</h1>
               <p className="hero-body">
-                Memolens gently supports a scheduled medication routine, captures a short
-                event window, and gives a trusted caregiver meaningful context for thoughtful
-                follow-up, while the wearer continues without using a screen.
-              </p>
+              Memolens delivers timely reminders, creates a private Memo of the support
+              moment, and gives caregivers context for thoughtful follow-up without
+              requiring the care recipient to navigate a screen.
+            </p>
               <div className="hero-actions">
                 <button
                   id="hero_test_memolens"
@@ -139,7 +139,7 @@ export function LandingPage() {
               </div>
               <p className="privacy-note">
                 <LockKeyhole size={16} aria-hidden="true" />
-                Supervised prototype · Use safe props only · Recordings remain on this device
+                Supervised prototype · Use safe test items only · Memos remain on this device
                 · Consented research metrics and voluntary contact details are stored in a
                 private Memolens Supabase database
               </p>
@@ -169,7 +169,7 @@ export function LandingPage() {
                 </div>
               </div>
               <div className="floating-note note-a">Gentle prompt</div>
-              <div className="floating-note note-b">Local recording</div>
+              <div className="floating-note note-b">Private Memo</div>
             </div>
           </div>
         </section>
@@ -177,8 +177,8 @@ export function LandingPage() {
         <section ref={howItWorksRef} id="how-it-works" className="steps-section">
           <div className="container">
             <div className="section-heading">
-              <p className="eyebrow">One calm, zero-touch loop</p>
-              <h2>Support at the right moment. Gentle support in the moment. Meaningful context for caregiver follow-up.</h2>
+              <p className="eyebrow">One simple, hands-free support loop</p>
+              <h2>Support at the right moment. Meaningful context for caregiver follow-up.</h2>
             </div>
             <div className="step-grid">
               {STEPS.map(({ number, icon: Icon, title, body }) => (
@@ -201,21 +201,21 @@ export function LandingPage() {
           <div className="container boundary-grid">
             <div className="boundary-copy">
               <p className="eyebrow light">Designed around trust</p>
-              <h2>Recorded context. Not an automated medication reminder.</h2>
+              <h2>Helpful context. Not automated medication decisions.</h2>
               <p>{PRODUCT_BOUNDARY}</p>
             </div>
             <div className="boundary-list" role="list">
               <div role="listitem">
                 <ShieldCheck size={21} />
-                <span>Camera and microphone capture stays in memory on this device.</span>
+                <span>Memo audio and video stay on this device during the test.</span>
               </div>
               <div role="listitem">
                 <Eye size={21} />
-                <span>Only a caregiver interprets recorded medication-event evidence.</span>
+                <span>Memolens does not decide what happened. The caregiver reviews the Memo and decides whether follow-up is needed.</span>
               </div>
               <div role="listitem">
                 <HeartHandshake size={21} />
-                <span>Safe-prop, supervised testing keeps the demonstration responsible.</span>
+                <span>Supervised testing with safe test items keeps the demonstration responsible.</span>
               </div>
             </div>
           </div>
@@ -225,7 +225,7 @@ export function LandingPage() {
           <div className="container final-cta-card">
             <div>
               <p className="eyebrow">Try the complete loop</p>
-              <h2>See how zero-touch support feels in practice.</h2>
+              <h2>See how hands-free support works in practice.</h2>
             </div>
             <div className="final-actions">
               <button
@@ -252,7 +252,7 @@ export function LandingPage() {
       <footer className="site-footer">
         <div className="container footer-inner">
           <Brand compact />
-          <p>Supervised research prototype · Media erased on refresh or close</p>
+          <p>Supervised research prototype · Memos erased on refresh or close</p>
           <Link to="/privacy">Privacy</Link>
         </div>
       </footer>

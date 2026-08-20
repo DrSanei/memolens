@@ -217,7 +217,7 @@ export function Preflight({ onStreamChange, onContinue, onCancel }: PreflightPro
         changes: {
           promptPlayback: "failed",
           errorCode: "PROMPT_PLAYBACK_FAILED",
-          errorMessage: "Prompt playback failed. Check device volume and browser audio support.",
+          errorMessage: "Reminder playback failed. Check device volume and browser audio support.",
         },
       });
     } finally {
@@ -257,14 +257,14 @@ export function Preflight({ onStreamChange, onContinue, onCancel }: PreflightPro
       <div className="workflow-heading-row">
         <div>
           <p className="eyebrow">Caregiver mode · Step 2 of 2</p>
-          <h1 id="preflight-title">Camera, microphone, and audio preflight</h1>
+          <h1 id="preflight-title">Quick device check</h1>
           <p className="lead-copy">
-            Confirm framing and prompt playback before the device enters wearer mode.
+            Check the camera, microphone, and reminder before starting the care recipient experience.
           </p>
         </div>
         <span className={ready ? "readiness-badge ready" : "readiness-badge"}>
           {ready ? <Check size={17} /> : <CircleAlert size={17} />}
-          {ready ? "Ready to arm" : "Checks required"}
+          {ready ? "Ready to start" : "Checks required"}
         </span>
       </div>
 
@@ -324,21 +324,21 @@ export function Preflight({ onStreamChange, onContinue, onCancel }: PreflightPro
         </div>
 
         <div className="preflight-checks-panel">
-          <h2>Required checks</h2>
+          <h2>Device checks</h2>
           <ul className="preflight-check-list">
-            <CheckRow label="Secure context" value={state.preflight.secureContext} detail="HTTPS or trusted local context" />
-            <CheckRow label="Camera API" value={state.preflight.mediaDevices} />
-            <CheckRow label="Microphone API" value={state.preflight.mediaDevices} />
-            <CheckRow label="MediaRecorder support" value={state.preflight.mediaRecorder} />
+            <CheckRow label="Secure connection" value={state.preflight.secureContext} detail="HTTPS or trusted local context" />
+            <CheckRow label="Camera available" value={state.preflight.mediaDevices} />
+            <CheckRow label="Microphone available" value={state.preflight.mediaDevices} />
+            <CheckRow label="Memo recording available" value={state.preflight.mediaRecorder} />
             <CheckRow label="Camera permission" value={state.preflight.cameraPermission === "granted"} />
             <CheckRow label="Microphone permission" value={state.preflight.microphonePermission === "granted"} />
             <CheckRow label="Camera preview" value={state.preflight.previewReady} />
-            <CheckRow label="Prompt playback" value={state.preflight.promptPlayback === "passed"} />
-            <CheckRow label="App visibility" value={state.preflight.visibility === "visible"} />
+            <CheckRow label="Reminder playback" value={state.preflight.promptPlayback === "passed"} />
+            <CheckRow label="App ready" value={state.preflight.visibility === "visible"} />
           </ul>
           <div className="preflight-summary">
             <span>
-              <Mic size={16} /> Audio + video requested together
+              <Mic size={16} /> Camera and microphone requested together
             </span>
             <span>
               <Clock3 size={16} /> Maximum {activeRoutine.maxDurationSeconds}s
@@ -350,7 +350,7 @@ export function Preflight({ onStreamChange, onContinue, onCancel }: PreflightPro
             onClick={testPrompt}
             disabled={testingPrompt}
           >
-            <Volume2 size={18} /> {testingPrompt ? "Playing prompt…" : "Test prompt"}
+            <Volume2 size={18} /> {testingPrompt ? "Playing reminder…" : "Test reminder"}
           </button>
         </div>
       </div>
@@ -366,8 +366,7 @@ export function Preflight({ onStreamChange, onContinue, onCancel }: PreflightPro
       ) : null}
 
       <p className="notice-soft">
-        The recording remains an in-memory Blob. It is never uploaded to the research
-        Supabase, an Edge Function, or any other network destination.
+        Memo audio and video stay on this device during the test. They are never uploaded to the research Supabase, an Edge Function, or another network destination.
       </p>
 
       <div className="split-actions">
@@ -380,7 +379,7 @@ export function Preflight({ onStreamChange, onContinue, onCancel }: PreflightPro
           onClick={continueAndArm}
           disabled={!ready}
         >
-          Continue and arm <ArrowRight size={18} />
+          Start experience <ArrowRight size={18} />
         </button>
       </div>
     </section>

@@ -119,7 +119,7 @@ export function CaregiverSetup({ onPrepare }: CaregiverSetupProps) {
       setPreviewStatus("idle");
     } catch {
       setPreviewStatus("failed");
-      setError("Prompt playback failed. Check device audio and browser support, then retry.");
+      setError("Reminder playback failed. Check device audio and browser support, then retry.");
     }
   };
 
@@ -319,7 +319,7 @@ export function CaregiverSetup({ onPrepare }: CaregiverSetupProps) {
           </div>
         ) : null}
 <div className="field span-two">
-          <label htmlFor="routine-prompt">Typed caregiver-approved prompt</label>
+          <label htmlFor="routine-prompt">Reminder message</label>
           <textarea
             id="routine-prompt"
             rows={3}
@@ -342,7 +342,7 @@ export function CaregiverSetup({ onPrepare }: CaregiverSetupProps) {
             disabled={previewStatus === "playing"}
           >
             <Volume2 size={18} />
-            {previewStatus === "playing" ? "Playing…" : "Preview prompt"}
+            {previewStatus === "playing" ? "Playing…" : "Preview reminder"}
           </button>
           <button
             className={recordingVoice ? "button button-danger-soft button-small" : "button button-secondary button-small"}
@@ -350,20 +350,20 @@ export function CaregiverSetup({ onPrepare }: CaregiverSetupProps) {
             onClick={recordingVoice ? stopVoiceRecording : startVoiceRecording}
           >
             {recordingVoice ? <CircleStop size={18} /> : <Mic size={18} />}
-            {recordingVoice ? "Stop recording" : "Record my voice"}
+            {recordingVoice ? "Stop recording reminder" : "Record reminder"}
           </button>
           {activeRoutine.voicePromptUrl ? (
             <button className="text-button danger-text" type="button" onClick={removeVoicePrompt}>
-              Remove voice prompt
+              Remove recorded reminder
             </button>
           ) : null}
           <span className="prompt-type-chip">
-            {activeRoutine.promptType === "caregiver_voice" ? "Voice prompt selected" : "Typed prompt selected"}
+            {activeRoutine.promptType === "caregiver_voice" ? "Recorded reminder selected" : "Reminder message selected"}
           </span>
         </div>
 
         <div className="field">
-          <label htmlFor="max-duration">Maximum recording duration</label>
+          <label htmlFor="max-duration">Maximum Memo length</label>
           <select
             id="max-duration"
             value={activeRoutine.maxDurationSeconds}
@@ -377,11 +377,29 @@ export function CaregiverSetup({ onPrepare }: CaregiverSetupProps) {
           </select>
         </div>
         <div className="field">
-          <label htmlFor="repeat-delay">Fixed prompt-repeat delay</label>
-          <input id="repeat-delay" value="15 seconds" readOnly />
+          <label htmlFor="repeat-delay">Time between reminders</label>
+          <select
+            id="repeat-delay"
+            value={activeRoutine.repeatDelaySeconds / 60}
+            onChange={(event) =>
+              updateRoutine({
+                repeatDelaySeconds: Math.round(Number(event.target.value) * 60),
+              })
+            }
+          >
+            <option value={0.25}>0.25 minute</option>
+            <option value={0.5}>0.5 minute</option>
+            <option value={1}>1 minute</option>
+            <option value={2}>2 minutes</option>
+            <option value={3}>3 minutes</option>
+            <option value={5}>5 minutes</option>
+          </select>
+          <span className="field-hint">
+            Set the interval between reminder repeats. Shorter options support quick MVP testing.
+          </span>
         </div>
         <div className="field">
-          <label htmlFor="maximum-repeats">Maximum repeat count</label>
+          <label htmlFor="maximum-repeats">Maximum reminder repeats</label>
           <select
             id="maximum-repeats"
             value={activeRoutine.maxRepeats}
@@ -395,7 +413,7 @@ export function CaregiverSetup({ onPrepare }: CaregiverSetupProps) {
             <option value={5}>5</option>
           </select>
           <span className="field-hint">
-            Repeats occur every 15 seconds and stop when the recording ends.
+            Recording ends after the final configured repeat or the maximum recording duration, whichever comes first.
           </span>
         </div>
         <div className="field">
@@ -490,8 +508,15 @@ export function CaregiverSetup({ onPrepare }: CaregiverSetupProps) {
         </button>
       </div>
 
-      <div className="setup-actions">
-        <button className="button button-secondary action-tile" type="button" onClick={() => prepare("scheduled")}>
+      <div className="setup-actions setup-actions-run-now">
+        <button
+          className="button button-secondary action-tile"
+          type="button"
+          onClick={() => prepare("scheduled")}
+          hidden
+          aria-hidden="true"
+          tabIndex={-1}
+        >
           <CalendarClock size={22} />
           <span>
             <strong>Arm Scheduled Test</strong>

@@ -64,7 +64,7 @@ describe("test workflow UI", () => {
     fireEvent.click(screen.getByRole("button", { name: /Allow camera and microphone/i }));
 
     await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("PERMISSION_DENIED"));
-    expect(screen.getByRole("button", { name: /Continue and arm/i })).toBeDisabled();
-    expect(screen.queryByText("Evidence available")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Start experience/i })).toBeDisabled();
+    expect(screen.queryByText("Memo ready")).not.toBeInTheDocument();
   });
 });

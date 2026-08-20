@@ -56,12 +56,12 @@ export function PrivacyPage() {
               <Database size={25} />
             </span>
             <p className="eyebrow">Only with consent</p>
-            <h2>Minimized research records may be sent.</h2>
+            <h2>Anonymous test data may be sent to help us evaluate and improve Memolens.</h2>
             <ul className="check-list">
               <li>Page, CTA, and workflow events from an anonymous session</li>
               <li>Coarse device, browser, operating-system, and permission results</li>
-              <li>Timing, capture outcome, caregiver disposition, and test ratings</li>
-              <li>Voluntary pre-order contact details under separate contact consent</li>
+              <li>Timing, Memo outcome, review outcome, and test ratings</li>
+              <li>Voluntary contact details under separate contact consent</li>
             </ul>
             <p className="notice-soft">
               Anonymous analytics can be declined without reducing product functionality.
@@ -73,12 +73,10 @@ export function PrivacyPage() {
         <section className="never-sent-card" aria-labelledby="never-sent-title">
           <div>
             <ShieldCheck size={24} aria-hidden="true" />
-            <h2 id="never-sent-title">Never included in research telemetry</h2>
+            <h2 id="never-sent-title">Never included in anonymous research data</h2>
           </div>
           <p>
-            Video, audio, media links, blobs, thumbnails, transcripts, exact prompt text,
-            wearer or caregiver names in test data, diagnoses, medication names, doses,
-            addresses, precise locations, or a full browser fingerprint.
+            Memo audio or video, media links, transcripts, exact reminder text, care recipient or caregiver names in test data, diagnoses, medication names, doses, addresses, precise locations, or a full browser fingerprint.
           </p>
         </section>
 

@@ -47,7 +47,7 @@ const BLOCKED_KEY_PARTS = [
   "thumbnail",
   "transcript",
   "video",
-  "wearer_name",
+  "care_recipient_name",
 ];
 const BLOCKED_TEXT_PATTERN =
   /(?:data:(?:audio|video|image)\/|blob:|;base64,|\b(?:diagnosis|dose|medication name|transcript)\s*:)/i;
@@ -206,6 +206,13 @@ export function validateTestSession(value: unknown): TestSessionRecord {
   if (value.caregiver_review_started_at_utc !== null) {
     assertTimestamp(value.caregiver_review_started_at_utc, "Caregiver review start");
   }
+  if (
+    value.feedback_submitted_at_utc !== undefined &&
+    value.feedback_submitted_at_utc !== null
+  ) {
+    assertTimestamp(value.feedback_submitted_at_utc, "Feedback submission time");
+  }
+
   for (const [key, max] of [
     ["participant_code", 40],
     ["participant_type", 60],
@@ -224,13 +231,17 @@ export function validateTestSession(value: unknown): TestSessionRecord {
     ["review_burden", 20],
     ["technical_error_code", 300],
     ["research_notes", 1_000],
+    ["would_consider_use", 10],
+    ["pilot_interest", 10],
+    ["feedback_text", 1_000],
     ["research_consent_version", 60],
   ] as const) {
     const item = value[key];
-    if (item !== null) assertSafeString(item, key, max);
+    if (item !== null && item !== undefined) assertSafeString(item, key, max);
   }
+
   for (const key of [
-    "wearer_interaction_count",
+    "care_recipient_interaction_count",
     "prompt_repeat_count",
     "recording_duration_seconds",
     "recording_blob_bytes",
@@ -240,6 +251,7 @@ export function validateTestSession(value: unknown): TestSessionRecord {
       throw new ResearchValidationError("invalid_number", `${key} is invalid.`);
     }
   }
+
   if (
     value.privacy_rating !== null &&
     (!Number.isInteger(value.privacy_rating) ||
@@ -248,6 +260,31 @@ export function validateTestSession(value: unknown): TestSessionRecord {
   ) {
     throw new ResearchValidationError("invalid_privacy_rating", "Privacy rating is invalid.");
   }
+
+  if (
+    value.overall_value_rating !== undefined &&
+    value.overall_value_rating !== null &&
+    (!Number.isInteger(value.overall_value_rating) ||
+      Number(value.overall_value_rating) < 1 ||
+      Number(value.overall_value_rating) > 5)
+  ) {
+    throw new ResearchValidationError(
+      "invalid_overall_value_rating",
+      "Overall value rating is invalid.",
+    );
+  }
+
+  for (const key of ["would_consider_use", "pilot_interest"] as const) {
+    const answer = value[key];
+    if (
+      answer !== undefined &&
+      answer !== null &&
+      !["yes", "maybe", "no"].includes(String(answer))
+    ) {
+      throw new ResearchValidationError("invalid_feedback_choice", `${key} is invalid.`);
+    }
+  }
+
   if (
     value.zero_touch_success !== null &&
     typeof value.zero_touch_success !== "boolean"
@@ -273,24 +310,52 @@ export function validateLead(value: unknown): LeadRecord {
   }
   assertUuid(value.lead_id, "Lead ID");
   assertTimestamp(value.submitted_at_utc, "Lead submission time");
-  assertSafeString(value.name, "Name", 100);
-  assertSafeString(value.phone_country_code, "Country code", 8);
-  assertSafeString(value.phone_number, "Phone number", 24);
+
+  if (value.name !== null) assertSafeString(value.name, "Name", 100);
+  if (value.email !== undefined && value.email !== null) {
+    assertSafeString(value.email, "Email", 254);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value.email))) {
+      throw new ResearchValidationError("invalid_email", "Email is invalid.");
+    }
+  }
+
+  const hasCountryCode =
+    typeof value.phone_country_code === "string" && value.phone_country_code.length > 0;
+  const hasPhone =
+    typeof value.phone_number === "string" && value.phone_number.length > 0;
+  if (hasCountryCode !== hasPhone) {
+    throw new ResearchValidationError(
+      "incomplete_phone",
+      "Phone country code and phone number must be provided together.",
+    );
+  }
+  if (hasPhone) {
+    assertSafeString(value.phone_country_code, "Country code", 8);
+    assertSafeString(value.phone_number, "Phone number", 24);
+    if (!/^\+[1-9]\d{0,3}$/.test(String(value.phone_country_code))) {
+      throw new ResearchValidationError("invalid_country_code", "Country calling code is invalid.");
+    }
+    if (!/^\d{6,18}$/.test(String(value.phone_number))) {
+      throw new ResearchValidationError("invalid_phone", "Phone number is invalid.");
+    }
+  }
+
+  const hasEmail = typeof value.email === "string" && value.email.trim().length > 0;
+  if (!hasPhone && !hasEmail) {
+    throw new ResearchValidationError(
+      "contact_method_required",
+      "At least one contact method is required.",
+    );
+  }
+
   assertSafeString(value.role_interest, "Role or interest", 80);
   assertSafeString(value.source_cta, "CTA source", 80);
   assertSafeString(value.consent_text_version, "Consent version", 60);
-  if (!/^\+[1-9]\d{0,3}$/.test(String(value.phone_country_code))) {
-    throw new ResearchValidationError("invalid_country_code", "Country calling code is invalid.");
-  }
-  if (!/^\d{6,18}$/.test(String(value.phone_number))) {
-    throw new ResearchValidationError("invalid_phone", "Phone number is invalid.");
-  }
   if (value.contact_consent !== true) {
     throw new ResearchValidationError("contact_consent_required", "Contact consent is required.");
   }
   return value as unknown as LeadRecord;
 }
-
 export function validateResearchEnvelope(value: unknown): ResearchEnvelope {
   assertNoBrowserObjects(value);
   if (!isPlainObject(value)) {

@@ -52,7 +52,7 @@ const BLOCKED_PROPERTY_KEYS = [
   "thumbnail",
   "transcript",
   "video",
-  "wearer_name",
+  "care_recipient_name",
 ];
 const CRITICAL_EVENTS = new Set<ResearchEventName>([
   "camera_permission_denied",
@@ -265,32 +265,37 @@ class ResearchLogger {
   }
 
   async submitLead(
-    lead: LeadRecord,
-    context: { honeypot: string; elapsedMs: number },
-  ): Promise<SupabaseAcknowledgement> {
-    if (context.honeypot.trim()) throw new Error("lead_honeypot_rejected");
-    if (!Number.isFinite(context.elapsedMs) || context.elapsedMs < 1_200) {
-      throw new Error("lead_submission_too_fast");
+      lead: LeadRecord,
+      context: { honeypot: string; elapsedMs: number },
+      analyticsSource: "preorder_form" | "post_test_feedback" = "preorder_form",
+    ): Promise<SupabaseAcknowledgement> {
+      if (context.honeypot.trim()) throw new Error("lead_honeypot_rejected");
+      if (!Number.isFinite(context.elapsedMs) || context.elapsedMs < 1_200) {
+        throw new Error("lead_submission_too_fast");
+      }
+      const acknowledgement = await submitResearchEnvelope(
+        this.createEnvelope({
+          leads: [lead],
+          lead_submission_context: {
+            honeypot: context.honeypot,
+            elapsed_ms: context.elapsedMs,
+          },
+        }),
+      );
+      if (this.consent === "allowed") {
+        this.log(
+          analyticsSource === "post_test_feedback"
+            ? "post_test_lead_submitted"
+            : "preorder_submitted",
+          {
+            ctaId: lead.source_cta,
+            source: analyticsSource,
+            properties: { role_interest: lead.role_interest },
+          },
+        );
+      }
+      return acknowledgement;
     }
-    const acknowledgement = await submitResearchEnvelope(
-      this.createEnvelope({
-        leads: [lead],
-        lead_submission_context: {
-          honeypot: context.honeypot,
-          elapsed_ms: context.elapsedMs,
-        },
-      }),
-    );
-    if (this.consent === "allowed") {
-      this.log("preorder_submitted", {
-        ctaId: lead.source_cta,
-        source: "preorder_form",
-        properties: { role_interest: lead.role_interest },
-      });
-    }
-    return acknowledgement;
-  }
-
   async submitTestSession(
     session: TestSessionRecord,
   ): Promise<SupabaseAcknowledgement | { ok: true; transmitted: false }> {

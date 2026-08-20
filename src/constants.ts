@@ -12,7 +12,7 @@ export const TEST_CONSENT_VERSION = "2026-08-16.v1";
 export const CONTACT_CONSENT_VERSION = "2026-08-16.v1";
 
 export const PRODUCT_BOUNDARY =
-  "Memolens is a supervised research prototype. It supports caregiver review but does not provide medication instructions or verify ingestion.";
+  "Memolens is a supervised research prototype. It supports reminders and caregiver review, but it does not determine whether medication was taken or make medication decisions.";
 
 export const DEFAULT_PROMPT =
   "Hi Mom, it’s time for your medication. Please go ahead and take your pills.";
@@ -74,7 +74,7 @@ export function createDefaultRoutine(index = 1): Routine {
 
 export const EMPTY_OBSERVATIONS: ResearchObservations = {
   zeroTouchSuccess: "",
-  wearerInteractionCount: 0,
+  careRecipientInteractionCount: 0,
   promptComprehension: "",
   clipUsefulness: "",
   falseReassurance: "",

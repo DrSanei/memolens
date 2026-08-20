@@ -14,6 +14,6 @@
 
 ## Never transmitted
 
-Media, object URLs, exact prompts, transcripts, wearer identity, caregiver identity in test data, diagnoses, medication names, doses, precise location, addresses, advertising IDs, full user-agent strings, and application-level IP fields are not accepted.
+Media, object URLs, exact prompts, transcripts, care recipient identity, caregiver identity in test data, diagnoses, medication names, doses, precise location, addresses, advertising IDs, full user-agent strings, and application-level IP fields are not accepted.
 
 Deleting local media does not retract structured records already confirmed by Supabase. The application states this distinction before deletion.

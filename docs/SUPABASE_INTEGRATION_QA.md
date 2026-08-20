@@ -35,7 +35,7 @@ Do not mark live Supabase ingestion complete until real rows are visually confir
 - [ ] Review the local clip.
 - [ ] Select a caregiver disposition.
 - [ ] Submit research observations.
-- [ ] Acknowledge and close the event.
+- [ ] Finish review the event.
 
 ## Row verification
 

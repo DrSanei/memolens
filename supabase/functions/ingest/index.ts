@@ -8,7 +8,7 @@ const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const EVENT_NAMES = new Set([
   "landing_viewed", "privacy_viewed", "test_route_viewed", "consent_viewed",
-  "caregiver_setup_viewed", "preflight_viewed", "wearer_ready_viewed",
+  "caregiver_setup_viewed", "preflight_viewed", "care_recipient_ready_viewed",
   "caregiver_inbox_viewed", "caregiver_review_viewed", "test_completion_viewed",
   "test_memolens_clicked", "see_how_it_works_clicked", "preorder_opened",
   "preorder_submitted", "preorder_submission_failed", "analytics_consent_accepted",
@@ -16,11 +16,12 @@ const EVENT_NAMES = new Set([
   "routine_saved", "prompt_previewed", "voice_prompt_recorded", "preflight_started",
   "camera_permission_granted", "camera_permission_denied",
   "microphone_permission_granted", "microphone_permission_denied", "test_armed",
-  "run_test_now_started", "wearer_mode_entered", "recording_started",
+  "run_test_now_started", "care_recipient_mode_entered", "recording_started",
   "announcement_played", "prompt_played", "prompt_repeated", "privacy_stop_used",
   "recording_completed", "recording_failed", "caregiver_mode_entered",
   "video_playback_started", "video_playback_completed", "video_review_skipped",
   "caregiver_disposition_selected", "research_observations_submitted", "test_closed",
+  "post_test_feedback_submitted", "post_test_lead_submitted",
   "recording_deleted", "session_cleared", "session_abandoned",
   "research_logging_failed",
 ]);
@@ -37,24 +38,25 @@ const ANALYTICS_KEYS = new Set([
 const SESSION_KEYS = new Set([
   "schema_version", "session_id", "participant_code", "participant_type",
   "test_condition", "started_at_utc", "ended_at_utc", "completion_state",
-  "furthest_step", "zero_touch_success", "wearer_interaction_count", "prompt_type",
+  "furthest_step", "zero_touch_success", "care_recipient_interaction_count", "prompt_type",
   "prompt_delivered", "prompt_repeat_count", "camera_permission",
   "microphone_permission", "recording_status", "recording_duration_seconds",
   "recording_blob_bytes", "privacy_stop", "video_review_status",
   "caregiver_review_started_at_utc", "review_duration_seconds",
   "caregiver_disposition", "clip_usefulness", "prompt_comprehension",
   "false_reassurance", "review_burden", "privacy_rating", "technical_error_code",
-  "research_notes", "research_consent_version", "submitted_at_utc",
+  "research_notes", "overall_value_rating", "would_consider_use", "pilot_interest",
+  "feedback_text", "feedback_submitted_at_utc", "research_consent_version", "submitted_at_utc",
 ]);
 const LEAD_KEYS = new Set([
   "schema_version", "lead_id", "submitted_at_utc", "name",
-  "phone_country_code", "phone_number", "role_interest", "source_cta",
+  "phone_country_code", "phone_number", "email", "role_interest", "source_cta",
   "contact_consent", "consent_text_version",
 ]);
 const FORBIDDEN_KEYS = [
   "audio", "base64", "blob", "caregiver_name", "diagnosis", "dose", "media",
   "medication_name", "prompt_text", "thumbnail", "transcript", "video",
-  "wearer_name",
+  "care_recipient_name",
 ];
 const FORBIDDEN_VALUE =
   /(?:data:(?:audio|video|image)\/|blob:|;base64,|\b(?:diagnosis|dose|medication name|transcript)\s*:)/i;
@@ -285,11 +287,20 @@ function validateSession(value: unknown): Record<string, unknown> {
   if (value.caregiver_review_started_at_utc !== null) {
     assertTimestamp(value.caregiver_review_started_at_utc, "Review start");
   }
+  if (value.feedback_submitted_at_utc !== undefined && value.feedback_submitted_at_utc !== null) {
+    assertTimestamp(value.feedback_submitted_at_utc, "Feedback submission time");
+  }
   assertString(value.participant_code, "Participant code", 40, true);
   assertString(value.technical_error_code, "Technical error code", 300, true);
   assertString(value.research_notes, "Research notes", 1000, true);
+  for (const key of ["would_consider_use", "pilot_interest", "feedback_text"]) {
+    const item = value[key];
+    if (item !== undefined) {
+      assertString(item, key, key === "feedback_text" ? 1000 : 10, true);
+    }
+  }
   for (const key of [
-    "wearer_interaction_count", "prompt_repeat_count", "recording_duration_seconds",
+    "care_recipient_interaction_count", "prompt_repeat_count", "recording_duration_seconds",
     "recording_blob_bytes", "review_duration_seconds",
   ]) {
     if (!Number.isInteger(value[key]) || Number(value[key]) < 0) {
@@ -298,6 +309,25 @@ function validateSession(value: unknown): Record<string, unknown> {
   }
   if (value.privacy_rating !== null && (!Number.isInteger(value.privacy_rating) || Number(value.privacy_rating) < 1 || Number(value.privacy_rating) > 5)) {
     throw new SafeError("invalid_privacy_rating", "Privacy rating is invalid.");
+  }
+  if (
+    value.overall_value_rating !== undefined &&
+    value.overall_value_rating !== null &&
+    (!Number.isInteger(value.overall_value_rating) ||
+      Number(value.overall_value_rating) < 1 ||
+      Number(value.overall_value_rating) > 5)
+  ) {
+    throw new SafeError("invalid_overall_value_rating", "Overall value rating is invalid.");
+  }
+  for (const key of ["would_consider_use", "pilot_interest"]) {
+    const answer = value[key];
+    if (
+      answer !== undefined &&
+      answer !== null &&
+      !["yes", "maybe", "no"].includes(String(answer))
+    ) {
+      throw new SafeError("invalid_feedback_choice", `${key} is invalid.`);
+    }
   }
   return value;
 }
@@ -308,18 +338,38 @@ function validateLead(value: unknown): Record<string, unknown> {
   if (value.schema_version !== SCHEMA_VERSION) throw new SafeError("schema_version_mismatch", "Schema version does not match.");
   assertUuid(value.lead_id, "Lead ID");
   assertTimestamp(value.submitted_at_utc, "Lead submission time");
-  assertString(value.name, "Name", 100);
-  assertString(value.phone_country_code, "Country code", 8);
-  assertString(value.phone_number, "Phone number", 24);
+
+  if (value.name !== null) assertString(value.name, "Name", 100);
+  if (value.email !== undefined && value.email !== null) {
+    assertString(value.email, "Email", 254);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value.email))) {
+      throw new SafeError("invalid_email", "Email is invalid.");
+    }
+  }
+
+  const hasCountryCode = typeof value.phone_country_code === "string" && value.phone_country_code.length > 0;
+  const hasPhone = typeof value.phone_number === "string" && value.phone_number.length > 0;
+  if (hasCountryCode !== hasPhone) {
+    throw new SafeError("incomplete_phone", "Phone country code and phone number must be provided together.");
+  }
+  if (hasPhone) {
+    assertString(value.phone_country_code, "Country code", 8);
+    assertString(value.phone_number, "Phone number", 24);
+    if (!/^\+[1-9]\d{0,3}$/.test(String(value.phone_country_code))) throw new SafeError("invalid_country_code", "Country calling code is invalid.");
+    if (!/^\d{6,18}$/.test(String(value.phone_number))) throw new SafeError("invalid_phone", "Phone number is invalid.");
+  }
+
+  const hasEmail = typeof value.email === "string" && value.email.trim().length > 0;
+  if (!hasPhone && !hasEmail) {
+    throw new SafeError("contact_method_required", "At least one contact method is required.");
+  }
+
   assertString(value.role_interest, "Role or interest", 80);
   assertString(value.source_cta, "CTA source", 80);
   assertString(value.consent_text_version, "Consent version", 60);
-  if (!/^\+[1-9]\d{0,3}$/.test(String(value.phone_country_code))) throw new SafeError("invalid_country_code", "Country calling code is invalid.");
-  if (!/^\d{6,18}$/.test(String(value.phone_number))) throw new SafeError("invalid_phone", "Phone number is invalid.");
   if (value.contact_consent !== true) throw new SafeError("contact_consent_required", "Contact consent is required.");
   return value;
 }
-
 function validateEnvelope(value: unknown): {
   schema_version: string;
   request_id: string;
@@ -378,24 +428,7 @@ function keyKind(value: string | undefined | null): string {
   return "other";
 }
 
-function trace(
-  level: "info" | "warn" | "error",
-  traceId: string,
-  stage: string,
-  details: Record<string, unknown> = {},
-): void {
-  const record = {
-    service: "memolens-research-ingest",
-    trace_id: traceId,
-    stage,
-    at_utc: new Date().toISOString(),
-    ...details,
-  };
-  const line = JSON.stringify(record);
-  if (level === "error") console.error(line);
-  else if (level === "warn") console.warn(line);
-  else console.log(line);
-}
+
 
 function dbErrorDetails(error: unknown): Record<string, unknown> {
   if (!isObject(error)) return { kind: typeof error };

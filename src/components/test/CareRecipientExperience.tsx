@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Check, CircleAlert, CircleStop, LockKeyhole, Radio, ShieldCheck } from "lucide-react";
 import { type RefObject, useCallback, useEffect, useRef, useState } from "react";
@@ -19,10 +19,11 @@ import { researchLogger } from "../../services/researchLogger";
 import { getNextScheduledDate } from "../../services/schedule";
 import type { CaptureStatus, MedicationEvent } from "../../types";
 
-interface WearerExperienceProps {
+interface CareRecipientExperienceProps {
   stream: MediaStream | null;
   recorderRef: RefObject<RecordingHandle | null>;
   onStreamChange: (stream: MediaStream | null) => void;
+  onReturnToCaregiver: () => void;
 }
 
 function formatClock(date: Date): string {
@@ -33,11 +34,12 @@ function formatClock(date: Date): string {
   }).format(date);
 }
 
-export function WearerExperience({
+export function CareRecipientExperience({
   stream,
   recorderRef,
   onStreamChange,
-}: WearerExperienceProps) {
+  onReturnToCaregiver,
+}: CareRecipientExperienceProps) {
   const { state, dispatch, activeRoutine, activeEvent } = useMemolens();
   const [countdownSeconds, setCountdownSeconds] = useState<number | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -98,9 +100,9 @@ export function WearerExperience({
       dispatch({ type: "ADD_EVENT", event });
       dispatch({ type: "SET_TIMING", changes: { recordingEndedAt: now } });
       dispatch({ type: "SET_WORKFLOW", step: "caregiver_inbox" });
-      setLiveAnnouncement("Capture could not be completed. Please hand the device to your caregiver.");
+      setLiveAnnouncement("Memo could not be completed. Please return to your caregiver.");
       researchLogger.log("recording_failed", {
-        roleMode: "wearer",
+        roleMode: "care_recipient",
         workflowStep: "processing",
         properties: {
           technical_error_code: code,
@@ -118,7 +120,7 @@ export function WearerExperience({
       finishingRef.current = true;
       clearTimers();
       dispatch({ type: "SET_WORKFLOW", step: "processing" });
-      setLiveAnnouncement("Preparing the recorded medication-event evidence…");
+      setLiveAnnouncement("Preparing your Memoâ€¦");
       const endedAt = new Date().toISOString();
       try {
         const result = await handle.result;
@@ -132,7 +134,7 @@ export function WearerExperience({
           ...(promptErrorRef.current ? [promptErrorRef.current] : []),
         ];
         const captureStatus: CaptureStatus = privacyStopRef.current
-          ? "stopped_by_wearer"
+          ? "stopped_by_care_recipient"
           : interruptionCodeRef.current
             ? "capture_incomplete"
             : "evidence_available";
@@ -164,9 +166,9 @@ export function WearerExperience({
           type: "SET_WORKFLOW",
           step: captureStatus === "evidence_available" ? "evidence_available" : "caregiver_inbox",
         });
-        if (captureStatus === "evidence_available" || captureStatus === "stopped_by_wearer") {
+        if (captureStatus === "evidence_available" || captureStatus === "stopped_by_care_recipient") {
           researchLogger.log("recording_completed", {
-            roleMode: "wearer",
+            roleMode: "care_recipient",
             workflowStep: "processing",
             elapsedMs: Math.round(durationSeconds * 1000),
             properties: {
@@ -180,7 +182,7 @@ export function WearerExperience({
           });
         } else {
           researchLogger.log("recording_failed", {
-            roleMode: "wearer",
+            roleMode: "care_recipient",
             workflowStep: "processing",
             properties: {
               recording_status: captureStatus,
@@ -192,7 +194,7 @@ export function WearerExperience({
         setLiveAnnouncement(
           privacyStopRef.current
             ? "Recording stopped. Your caregiver can review what was captured."
-            : "You’re all set. Your caregiver can review the update.",
+            : "You're all set. Your caregiver can review the update.",
         );
         void speakText(
           "The recording is complete and your caregiver can review the update.",
@@ -219,28 +221,40 @@ export function WearerExperience({
   );
 
   const stopRecording = useCallback(
-    (reason: "automatic" | "privacy" | "hidden") => {
+    (reason: "automatic" | "privacy" | "hidden" | "repeat_limit") => {
+      if (finishingRef.current) return;
       const handle = recorderRef.current;
       if (!handle) return;
       if (reason === "privacy") {
         privacyStopRef.current = true;
+        const elapsedMs = recordingStartedAtRef.current
+          ? Math.max(
+              0,
+              Date.now() - new Date(recordingStartedAtRef.current).getTime(),
+            )
+          : 0;
         researchLogger.log("privacy_stop_used", {
-          roleMode: "wearer",
+          roleMode: "care_recipient",
           workflowStep: "recording",
-          elapsedMs: elapsedSeconds * 1000,
+          elapsedMs,
         });
       }
       if (reason === "hidden") interruptionCodeRef.current = "TAB_HIDDEN_RECORDING";
       handle.stop();
       void finalizeRecording(handle);
-    }, [elapsedSeconds, finalizeRecording, recorderRef],
+    },
+    [finalizeRecording, recorderRef],
   );
-
   const scheduleRepeats = useCallback(() => {
     repeatTimersRef.current.forEach((timer) => clearTimeout(timer));
     repeatTimersRef.current = [];
-    for (let repeatNumber = 1; repeatNumber <= activeRoutine.maxRepeats; repeatNumber += 1) {
+    for (
+      let repeatNumber = 1;
+      repeatNumber <= activeRoutine.maxRepeats;
+      repeatNumber += 1
+    ) {
       const timer = setTimeout(async () => {
+        if (finishingRef.current) return;
         repeatCountRef.current = repeatNumber;
         let success = true;
         try {
@@ -250,7 +264,7 @@ export function WearerExperience({
           promptErrorRef.current = "PROMPT_REPEAT_FAILED";
         }
         researchLogger.log("prompt_repeated", {
-          roleMode: "wearer",
+          roleMode: "care_recipient",
           workflowStep: "recording",
           properties: {
             prompt_type: activeRoutine.promptType,
@@ -258,11 +272,13 @@ export function WearerExperience({
             repeat_count: repeatNumber,
           },
         });
+        if (repeatNumber === activeRoutine.maxRepeats) {
+          stopRecording("repeat_limit");
+        }
       }, activeRoutine.repeatDelaySeconds * 1000 * repeatNumber);
       repeatTimersRef.current.push(timer);
     }
-  }, [activeRoutine]);
-
+  }, [activeRoutine, stopRecording]);
   const startCapture = useCallback(async () => {
     if (startedRef.current || finishingRef.current) return;
     startedRef.current = true;
@@ -290,7 +306,7 @@ export function WearerExperience({
       dispatch({ type: "SET_WORKFLOW", step: "recording" });
       setLiveAnnouncement("Recording in progress");
       researchLogger.log("recording_started", {
-        roleMode: "wearer",
+        roleMode: "care_recipient",
         workflowStep: "recording",
         elapsedMs: state.timing.armedAt
           ? Date.now() - new Date(state.timing.armedAt).getTime()
@@ -319,7 +335,7 @@ export function WearerExperience({
         promptErrorRef.current = "ANNOUNCEMENT_PLAYBACK_FAILED";
       }
       researchLogger.log("announcement_played", {
-        roleMode: "wearer",
+        roleMode: "care_recipient",
         workflowStep: "recording",
         properties: { prompt_delivery_success: announcementSuccess },
       });
@@ -333,7 +349,7 @@ export function WearerExperience({
         promptErrorRef.current = "PROMPT_PLAYBACK_FAILED";
       }
       researchLogger.log("prompt_played", {
-        roleMode: "wearer",
+        roleMode: "care_recipient",
         workflowStep: "recording",
         properties: {
           prompt_type: activeRoutine.promptType,
@@ -397,13 +413,13 @@ export function WearerExperience({
   const finishedEvent = activeEvent;
 
   return (
-    <section className="wearer-card" aria-labelledby="wearer-status-title">
-      <MemolensMark className="wearer-mark" variant="reversed" />
+    <section className="care-recipient-card" aria-labelledby="care-recipient-status-title">
+      <MemolensMark className="care-recipient-mark" variant="reversed" />
       {!finishedEvent ? (
         <>
           <p className="eyebrow">{recording ? "Scheduled event" : "Prepared"}</p>
-          <h1 id="wearer-status-title">{liveAnnouncement}</h1>
-          <p className="wearer-routine-label">{activeRoutine.label}</p>
+          <h1 id="care-recipient-status-title">{liveAnnouncement}</h1>
+          <p className="care-recipient-routine-label">{activeRoutine.label}</p>
           {!recording ? (
             <div className="ready-status">
               <ShieldCheck size={22} />
@@ -420,7 +436,7 @@ export function WearerExperience({
             <div className="recording-status" role="status" aria-live="assertive">
               <span className="recording-pulse" aria-hidden="true" />
               <div>
-                <strong>Recording</strong>
+                <strong>Creating Memo</strong>
                 <span>
                   {String(Math.floor(elapsedSeconds / 60)).padStart(2, "0")}:
                   {String(elapsedSeconds % 60).padStart(2, "0")} of {activeRoutine.maxDurationSeconds}s
@@ -435,18 +451,18 @@ export function WearerExperience({
               type="button"
               onClick={() => stopRecording("privacy")}
             >
-              <CircleStop size={22} /> Stop recording
+              <CircleStop size={22} /> Stop Memo
               <span>Optional privacy control</span>
             </button>
           ) : null}
-          <p className="wearer-no-action">
+          <p className="care-recipient-no-action">
             {recording
-              ? "No interaction is required. The recording will end automatically."
-              : "No wearer interaction is required."}
+              ? "No action is needed. The Memo will finish automatically."
+              : "No action is needed."}
           </p>
         </>
       ) : (
-        <div className="wearer-finished" aria-live="polite">
+        <div className="care-recipient-finished" aria-live="polite">
           <span className={finishedEvent.captureStatus === "capture_unavailable" || finishedEvent.captureStatus === "capture_incomplete" ? "finish-icon warning" : "finish-icon"}>
             {finishedEvent.captureStatus === "capture_unavailable" || finishedEvent.captureStatus === "capture_incomplete" ? (
               <CircleAlert size={30} />
@@ -455,18 +471,27 @@ export function WearerExperience({
             )}
           </span>
           <p className="eyebrow">Event ended</p>
-          <h1 id="wearer-status-title">
+          <h1 id="care-recipient-status-title">
             {finishedEvent.captureStatus === "capture_unavailable" || finishedEvent.captureStatus === "capture_incomplete"
               ? "Caregiver review is required."
-              : "You’re all set. Your caregiver can review the update."}
+              : "You're all set. Your caregiver can review the update."}
           </h1>
           <p>
             {finishedEvent.objectUrl
-              ? "Video is available for caregiver review on this device."
-              : "Capture was unavailable, so no video was created."}
+              ? "Memo is ready for caregiver review on this device."
+              : "Memo could not be created."}
           </p>
           <div className="handoff-note">
-            <LockKeyhole size={19} /> Please hand the device back to your caregiver.
+            <LockKeyhole size={19} /> Please return to your caregiver when ready.
+          </div>
+          <div className="care-recipient-handoff-actions">
+            <button
+              className="button button-secondary"
+              type="button"
+              onClick={onReturnToCaregiver}
+            >
+              Go to the caregiver panel
+            </button>
           </div>
         </div>
       )}
