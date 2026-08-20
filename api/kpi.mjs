@@ -223,6 +223,15 @@ async function fetchAll(table, select = "*", orderBy = null) {
   return data || [];
 }
 
+async function fetchOptionalAll(table, select = "*", orderBy = null) {
+  try {
+    return { rows: await fetchAll(table, select, orderBy), available: true };
+  } catch {
+    // Optional diagnostics must never block the core learning dashboard.
+    return { rows: [], available: false };
+  }
+}
+
 async function leadCount() {
   const client = supabaseAdmin();
   const { count, error } = await client.from("leads").select("lead_id", { count: "exact", head: true });
@@ -231,15 +240,20 @@ async function leadCount() {
 }
 
 async function summary() {
-  const [sessions, events, errors, leads] = await Promise.all([
+  const [sessions, events, errorResult, leads] = await Promise.all([
     // Use "*" here so the dashboard remains readable across the original,
     // post-feedback, and care-recipient terminology schema revisions.
     // Missing newer fields are treated as "not yet recorded" by the KPI logic.
     fetchAll("test_sessions", "*", "submitted_at_utc"),
     fetchAll("analytics_events", "session_id,event_name,occurred_at_utc", "occurred_at_utc"),
-    fetchAll("ingestion_errors", "received_at_utc,error_code,payload_type,session_id", "received_at_utc"),
+    fetchOptionalAll(
+      "ingestion_errors",
+      "received_at_utc,error_code,payload_type,session_id",
+      "received_at_utc",
+    ),
     leadCount(),
   ]);
+  const errors = errorResult.rows;
 
   const recordingEligible = sessions.filter((row) => typeof row.recording_status === "string" && row.recording_status);
   const recordingSuccess = recordingEligible.filter((row) =>
@@ -284,6 +298,9 @@ async function summary() {
       recording_success: "Share of submitted sessions whose recording_status is evidence_available or completed.",
       value_rating: "Average voluntary overall_value_rating among submitted post-test responses.",
       pilot_interest: "Yes/Maybe/No voluntary pilot_interest responses.",
+    },
+    diagnostics: {
+      ingestion_errors_available: errorResult.available,
     },
     counts: {
       submitted_sessions: sessions.length,

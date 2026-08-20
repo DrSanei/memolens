@@ -59,4 +59,11 @@ describe("private KPI dashboard", () => {
     expect(screen.queryByText("Preparing the current KPI view.")).not.toBeInTheDocument();
   });
 
+  it("keeps ingestion_errors optional so diagnostics cannot block core KPIs", async () => {
+    const fs = await import("node:fs/promises");
+    const api = await fs.readFile("api/kpi.mjs", "utf8");
+    expect(api).toContain("fetchOptionalAll");
+    expect(api).toContain("ingestion_errors_available");
+  });
+
 });

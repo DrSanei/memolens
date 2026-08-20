@@ -49,6 +49,9 @@ type KpiSummary = {
     value_rating: string;
     pilot_interest: string;
   };
+  diagnostics: {
+    ingestion_errors_available: boolean;
+  };
   counts: {
     submitted_sessions: number;
     analytics_sessions: number;
@@ -747,6 +750,15 @@ export function KpiPage() {
           </div>
         </section>
 
+        {!summary.diagnostics.ingestion_errors_available ? (
+          <div className="kpi-page-alert kpi-section-space" role="status">
+            <AlertTriangle size={17} />
+            <span>
+              Core KPI data loaded successfully. The ingestion-errors diagnostic table is currently unavailable, so technical error-history counts are omitted.
+            </span>
+          </div>
+        ) : null}
+
         <section className="kpi-grid-two kpi-section-space kpi-bottom-grid">
           <article className="kpi-panel">
             <div className="kpi-panel-heading">
@@ -759,7 +771,10 @@ export function KpiPage() {
             <div className="kpi-data-health">
               <div><span>Analytics sessions</span><strong>{summary.counts.analytics_sessions}</strong></div>
               <div><span>Contact leads</span><strong>{summary.counts.leads}</strong></div>
-              <div><span>Ingestion errors · 7 days</span><strong>{summary.counts.ingestion_errors_7d}</strong></div>
+              <div>
+                <span>Ingestion errors · 7 days</span>
+                <strong>{summary.diagnostics.ingestion_errors_available ? summary.counts.ingestion_errors_7d : "Unavailable"}</strong>
+              </div>
               <div><span>Feedback responses</span><strong>{summary.counts.feedback_responses}</strong></div>
             </div>
           </article>
