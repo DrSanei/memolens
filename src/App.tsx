@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+﻿import { useEffect } from "react";
 import {
   BrowserRouter,
   MemoryRouter,
@@ -9,6 +9,7 @@ import {
 import { LandingPage } from "./routes/Landing";
 import { PrivacyPage } from "./routes/Privacy";
 import { TestPage } from "./routes/Test";
+import { KpiPage } from "./routes/Kpi";
 import { MemolensProvider, useMemolens } from "./state/context";
 import { researchLogger } from "./services/researchLogger";
 
@@ -55,6 +56,7 @@ function AppRoutes() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/test" element={<TestPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/kpi" element={<KpiPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
