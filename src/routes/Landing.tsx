@@ -107,9 +107,7 @@ export function LandingPage() {
               <p className="eyebrow">Real-time memory and safety support</p>
               <h1>Built with care for the moments memory may miss.</h1>
               <p className="hero-body">
-              Memolens delivers timely reminders, creates a private Memo of the support
-              moment, and gives caregivers context for thoughtful follow-up without
-              requiring the care recipient to navigate a screen.
+              Memolens helps people living with dementia stay safer and more independent through private, real-time memory and safety support, while keeping caregivers connected with the context and alerts they need for confident, timely follow-up.
             </p>
               <div className="hero-actions">
                 <button
