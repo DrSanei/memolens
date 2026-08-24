@@ -1,4 +1,5 @@
-import react from "@vitejs/plugin-react";
+﻿import react from "@vitejs/plugin-react";
+import { cloudflare } from "@cloudflare/vite-plugin";
 import tailwindcss from "@tailwindcss/postcss";
 import { defineConfig, loadEnv } from "vite";
 
@@ -11,7 +12,7 @@ export default defineConfig(({ mode }) => {
         plugins: [tailwindcss()],
       },
     },
-    plugins: [react()],
+    plugins: [react(), cloudflare()],
     server: { host: "0.0.0.0", port: 5173, allowedHosts: ["terminal.local"] },
     preview: { host: "0.0.0.0", port: 4173 },
     build: {

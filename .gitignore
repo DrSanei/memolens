@@ -20,3 +20,5 @@ supabase/.temp/
 
 outputs/
 work/
+
+.dev.vars*
