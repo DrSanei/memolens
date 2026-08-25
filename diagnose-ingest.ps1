@@ -1,11 +1,11 @@
 $ErrorActionPreference = "Stop"
 
-Write-Host "Memolens research-ingest diagnostic" -ForegroundColor Cyan
+Write-Host "Memolenz research-ingest diagnostic" -ForegroundColor Cyan
 Write-Host "This sends one synthetic analytics event only. It sends no recording, medication, caregiver, or participant data.`n"
 
 $envFile = Join-Path (Get-Location) ".env.local"
 if (-not (Test-Path $envFile)) {
-  throw ".env.local was not found. Run this script from the Memolens project root."
+  throw ".env.local was not found. Run this script from the Memolenz project root."
 }
 
 $vars = @{}

@@ -28,7 +28,7 @@ Do not mark live Supabase ingestion complete until real rows are visually confir
 ## Product-path verification
 
 - [ ] Accept anonymous research data on the landing page.
-- [ ] Press hero, final, and sticky Test Memolens CTAs.
+- [ ] Press hero, final, and sticky Test Memolenz CTAs.
 - [ ] Open both pre-order CTA locations.
 - [ ] Submit one clearly marked test lead with contact consent.
 - [ ] Complete one safe-prop test using real camera and microphone capture.

@@ -394,7 +394,7 @@ async function exportDataset(dataset) {
     ]);
     return {
       type: "application/json; charset=utf-8",
-      filename: `memolens-research-backup-${stamp()}.json`,
+      filename: `memolenz-research-backup-${stamp()}.json`,
       content: JSON.stringify({
         exported_at_utc: new Date().toISOString(),
         analytics_events,
@@ -414,7 +414,7 @@ async function exportDataset(dataset) {
   const rows = await fetchAll(config[0], "*", config[1]);
   return {
     type: "text/csv; charset=utf-8",
-    filename: `memolens-${config[0]}-${stamp()}.csv`,
+    filename: `memolenz-${config[0]}-${stamp()}.csv`,
     content: `\uFEFF${toCsv(rows)}`,
   };
 }

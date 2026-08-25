@@ -1,4 +1,4 @@
--- READ-ONLY Memolens diagnostic queries. Safe to run in Supabase SQL Editor.
+-- READ-ONLY Memolenz diagnostic queries. Safe to run in Supabase SQL Editor.
 
 -- 1. Confirm the expected tables exist.
 select table_schema, table_name

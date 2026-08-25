@@ -1,11 +1,11 @@
 # Supabase setup
 
-This guide configures the only external research-data service used by Memolens. Supabase stores structured, consented research records and separately consented contact interest. It never receives media.
+This guide configures the only external research-data service used by Memolenz. Supabase stores structured, consented research records and separately consented contact interest. It never receives media.
 
 ## 1. Create the project
 
 1. Create a private Supabase project.
-2. Keep the project owned by the authorized Memolens organization.
+2. Keep the project owned by the authorized Memolenz organization.
 3. Do not enable public table browsing or expose a service-role key.
 4. Copy the project URL and public anon key from **Project Settings → API**.
 
@@ -63,7 +63,7 @@ The included function is recommended for public demonstrations that collect cont
 
 ```bash
 npx supabase functions deploy ingest
-npx supabase secrets set ALLOWED_ORIGIN=https://your-memolens-domain.example
+npx supabase secrets set ALLOWED_ORIGIN=https://your-memolenz-domain.example
 ```
 
 Supabase supplies `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to its hosted function. Do not add either secret to frontend files.

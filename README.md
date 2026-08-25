@@ -1,8 +1,8 @@
-# Memolens
+# Memolenz
 
-Memolens is an opensource, research and demonstration prototype for medication-routine support. A caregiver configures and arms a routine, the wearer receives a deterministic spoken prompt while the browser captures a short camera-and-microphone window, and the caregiver reviews the local recording and records a disposition.
+Memolenz is an opensource, research and demonstration prototype for medication-routine support. A caregiver configures and arms a routine, the wearer receives a deterministic spoken prompt while the browser captures a short camera-and-microphone window, and the caregiver reviews the local recording and records a disposition.
 
-> Memolens is a supervised research prototype. It supports caregiver review but does not provide medication instructions or verify ingestion.
+> Memolenz is a supervised research prototype. It supports caregiver review but does not provide medication instructions or verify ingestion.
 
 Use an empty pillbox, candy, or another safe non-medication prop. This repository is not a clinically validated or production medical system.
 
