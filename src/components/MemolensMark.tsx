@@ -6,7 +6,7 @@ type MemolensMarkProps = SVGProps<SVGSVGElement> & {
 };
 
 /**
- * The Memolens symbol combines a lens/eye with a simplified brain.
+ * The Memolenz symbol combines a lens/eye with a simplified brain.
  * The coral node represents a gentle memory cue,not a clinical result.
  */
 export function MemolensMark({

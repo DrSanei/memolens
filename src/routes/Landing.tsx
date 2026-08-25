@@ -29,7 +29,7 @@ const STEPS = [
     number: "02",
     icon: Sparkles,
     title: "Support the moment",
-    body: "Memolens delivers the reminder and creates a private Memo of the support moment.",
+    body: "Memolenz delivers the reminder and creates a private Memo of the support moment.",
   },
   {
     number: "03",
@@ -107,7 +107,7 @@ export function LandingPage() {
               <p className="eyebrow">Real-time memory and safety support</p>
               <h1>Built with care for the moments memory may miss.</h1>
               <p className="hero-body">
-              Memolens helps people living with dementia stay safer and more independent through private, real-time memory and safety support, while keeping caregivers connected with the context and alerts they need for confident, timely follow-up.
+              Memolenz helps people living with dementia stay safer and more independent through private, real-time memory and safety support, while keeping caregivers connected with the context and alerts they need for confident, timely follow-up.
             </p>
               <div className="hero-actions">
                 <button
@@ -116,7 +116,7 @@ export function LandingPage() {
                   type="button"
                   onClick={() => openTest("hero_test_memolens")}
                 >
-                  Test Memolens <ArrowRight size={18} />
+                  Test Memolenz <ArrowRight size={18} />
                 </button>
                 <button
                   id="hero_see_how_it_works"
@@ -139,7 +139,7 @@ export function LandingPage() {
                 <LockKeyhole size={16} aria-hidden="true" />
                 Supervised prototype · Use safe test items only · Memos remain on this device
                 · Consented research metrics and voluntary contact details are stored in a
-                private Memolens Supabase database
+                private Memolenz Supabase database
               </p>
             </div>
 
@@ -209,7 +209,7 @@ export function LandingPage() {
               </div>
               <div role="listitem">
                 <Eye size={21} />
-                <span>Memolens does not decide what happened. The caregiver reviews the Memo and decides whether follow-up is needed.</span>
+                <span>Memolenz does not decide what happened. The caregiver reviews the Memo and decides whether follow-up is needed.</span>
               </div>
               <div role="listitem">
                 <HeartHandshake size={21} />
@@ -232,7 +232,7 @@ export function LandingPage() {
                 type="button"
                 onClick={() => openTest("final_test_memolens")}
               >
-                Test Memolens <ArrowRight size={18} />
+                Test Memolenz <ArrowRight size={18} />
               </button>
               <button
                 id="final_preorder"
@@ -265,7 +265,7 @@ export function LandingPage() {
         aria-hidden={!showSticky}
         tabIndex={showSticky ? 0 : -1}
       >
-        Test Memolens <ArrowRight size={18} />
+        Test Memolenz <ArrowRight size={18} />
       </button>
 
       {preorderSource ? (

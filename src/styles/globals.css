@@ -75,7 +75,7 @@ h1, h2, h3 { letter-spacing: -0.025em; line-height: 1.12; }
 .danger-text { color: #a44c36 !important; }
 
 .brand { display: inline-flex; min-height: 44px; align-items: center; gap: 10px; }
-/* Memolens memory + lens symbol */
+/* Memolenz memory + lens symbol */
 .memolens-symbol { display: block; overflow: visible; }
 .memolens-symbol__lens { fill: var(--mint); stroke: var(--teal); }
 .memolens-symbol__brain { fill: var(--cream); stroke: var(--ink); }

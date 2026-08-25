@@ -34,7 +34,7 @@ describe("test workflow UI", () => {
       /I have permission from everyone/i,
       /I will use an empty pillbox/i,
       /I understand the recording stays/i,
-      /I understand Memolens does not verify/i,
+      /I understand Memolenz does not verify/i,
     ].forEach((label) => fireEvent.click(screen.getByLabelText(label)));
     fireEvent.click(screen.getByRole("button", { name: /Continue to caregiver setup/i }));
 
@@ -57,7 +57,7 @@ describe("test workflow UI", () => {
       /I have permission from everyone/i,
       /I will use an empty pillbox/i,
       /I understand the recording stays/i,
-      /I understand Memolens does not verify/i,
+      /I understand Memolenz does not verify/i,
     ].forEach((label) => fireEvent.click(screen.getByLabelText(label)));
     fireEvent.click(screen.getByRole("button", { name: /Continue to caregiver setup/i }));
     fireEvent.click(screen.getByRole("button", { name: /Run Test Now/i }));

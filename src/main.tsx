@@ -5,7 +5,7 @@ import "./styles/globals.css";
 
 const root = document.getElementById("root");
 
-if (!root) throw new Error("Memolens root element was not found.");
+if (!root) throw new Error("Memolenz root element was not found.");
 
 createRoot(root).render(
   <StrictMode>

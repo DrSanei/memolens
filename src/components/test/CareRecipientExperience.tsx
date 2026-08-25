@@ -43,7 +43,7 @@ export function CareRecipientExperience({
   const { state, dispatch, activeRoutine, activeEvent } = useMemolens();
   const [countdownSeconds, setCountdownSeconds] = useState<number | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [liveAnnouncement, setLiveAnnouncement] = useState("Memolens is ready");
+  const [liveAnnouncement, setLiveAnnouncement] = useState("Memolenz is ready");
   const startedRef = useRef(false);
   const recordingStartedAtRef = useRef<string | undefined>(undefined);
   const privacyStopRef = useRef(false);
@@ -424,7 +424,7 @@ export function CareRecipientExperience({
             <div className="ready-status">
               <ShieldCheck size={22} />
               <div>
-                <strong>Memolens is ready</strong>
+                <strong>Memolenz is ready</strong>
                 <span>
                   {state.testIntent === "run_now"
                     ? `Starting in ${countdownSeconds ?? 5} seconds`

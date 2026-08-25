@@ -32,7 +32,7 @@ export function AnalyticsConsentChoice() {
       <div className="analytics-copy">
         <h2 id="analytics-consent-title">A small research choice</h2>
         <p>
-          Help us evaluate Memolens by sharing anonymous interaction data such as page
+          Help us evaluate Memolenz by sharing anonymous interaction data such as page
           views, button presses, workflow progress, technical results, and test ratings.
           Recordings, audio, phone numbers, medication details, and typed form content are
           not included.

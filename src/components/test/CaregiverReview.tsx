@@ -565,7 +565,7 @@ export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverRevi
         <div className="post-test-feedback" aria-labelledby="post-test-feedback-title">
           <div className="post-test-feedback-heading">
             <p className="eyebrow">Quick feedback</p>
-            <h2 id="post-test-feedback-title">Help us improve Memolens</h2>
+            <h2 id="post-test-feedback-title">Help us improve Memolenz</h2>
             <p>
               Three quick questions help us understand usefulness and future interest.
               Email and written feedback are optional.
@@ -584,7 +584,7 @@ export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverRevi
             <div className="feedback-grid">
               <fieldset className="feedback-question">
                 <legend>
-                  Overall, how valuable would a system like Memolens be in your caregiving/work situation?
+                  Overall, how valuable would a system like Memolenz be in your caregiving/work situation?
                 </legend>
                 <div className="rating-row" role="group" aria-label="Overall value rating">
                   {[1, 2, 3, 4, 5].map((rating) => (
@@ -610,7 +610,7 @@ export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverRevi
               </fieldset>
 
               <ChoiceQuestion
-                legend="Would you consider using Memolens if it became available?"
+                legend="Would you consider using Memolenz if it became available?"
                 value={wouldConsiderUse}
                 onChange={(value) => {
                   setWouldConsiderUse(value);
@@ -657,7 +657,7 @@ export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverRevi
                   placeholder="you@example.com"
                 />
                 <span className="field-hint">
-                  If you provide an email, you agree that Memolens may contact you about future testing or pilot opportunities.
+                  If you provide an email, you agree that Memolenz may contact you about future testing or pilot opportunities.
                 </span>
               </div>
 
@@ -881,7 +881,7 @@ export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverRevi
 
       <fieldset className="disposition-fieldset">
         <legend>Review outcome</legend>
-        <p>Memolens does not decide what happened. Review the Memo and choose whether follow-up is needed.</p>
+        <p>Memolenz does not decide what happened. Review the Memo and choose whether follow-up is needed.</p>
         <div className="disposition-grid">
           {DISPOSITIONS.map((option) => (
             <label key={option.value}>

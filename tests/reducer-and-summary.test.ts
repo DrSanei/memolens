@@ -7,7 +7,7 @@ import {
 import { researchLogger } from "../src/services/researchLogger";
 import type { MedicationEvent } from "../src/types";
 
-describe("Memolens workflow reducer", () => {
+describe("Memolenz workflow reducer", () => {
   it("tracks genuine state transitions and the furthest step", () => {
     const initial = createInitialState();
     const setup = memolensReducer(initial, {

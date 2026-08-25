@@ -11,7 +11,7 @@ const CONFIRMATIONS = [
   "I have permission from everyone who may be recorded.",
   "I will use an empty pillbox or another safe non-medication prop.",
   "I understand the recording stays on this device and may be lost on refresh or close.",
-  "I understand Memolens does not verify medication ingestion or provide medication decisions.",
+  "I understand Memolenz does not verify medication ingestion or provide medication decisions.",
 ];
 
 export function TestConsentGate() {
@@ -65,7 +65,7 @@ export function TestConsentGate() {
         <ShieldCheck size={28} />
       </span>
       <p className="eyebrow">Safe, supervised demonstration</p>
-      <h1 id="test-consent-title">Before you test Memolens</h1>
+      <h1 id="test-consent-title">Before you test Memolenz</h1>
       <p className="lead-copy">
         This test briefly records camera and microphone input. Please complete each
         confirmation before caregiver setup.
@@ -94,7 +94,7 @@ export function TestConsentGate() {
       {state.analyticsConsent === "allowed" ? (
         <p className="notice-soft">
           Structured workflow events, technical results, and your test ratings will be sent
-          to the private Memolens Supabase database. No recording or audio will be transmitted.
+          to the private Memolenz Supabase database. No recording or audio will be transmitted.
         </p>
       ) : (
         <p className="notice-soft">

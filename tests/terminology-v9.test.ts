@@ -20,7 +20,7 @@ function textFiles(dir: string): string[] {
   return output;
 }
 
-describe("Memolens v9 terminology", () => {
+describe("Memolenz v9 terminology", () => {
   it("uses Care recipient instead of wearer in active application code", () => {
     const files = [
       ...textFiles("src"),

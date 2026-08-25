@@ -3,9 +3,9 @@ import { MemolensMark } from "./MemolensMark";
 
 export function Brand({ compact = false }: { compact?: boolean }) {
   return (
-    <Link className="brand" to="/" aria-label="Memolens home">
+    <Link className="brand" to="/" aria-label="Memolenz home">
       <MemolensMark className="brand-mark" />
-      <span className={compact ? "brand-name compact" : "brand-name"}>Memolens</span>
+      <span className={compact ? "brand-name compact" : "brand-name"}>Memolenz</span>
     </Link>
   );
 }

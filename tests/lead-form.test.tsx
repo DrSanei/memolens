@@ -9,7 +9,7 @@ function openAndFillForm() {
   fireEvent.change(screen.getByLabelText("Name"), { target: { value: "LaunchCon Test" } });
   fireEvent.change(screen.getByLabelText("Country code"), { target: { value: "+46" } });
   fireEvent.change(screen.getByLabelText("Phone number"), { target: { value: "070 123 45 67" } });
-  fireEvent.click(screen.getByLabelText(/I agree that the Memolens team may store/i));
+  fireEvent.click(screen.getByLabelText(/I agree that the Memolenz team may store/i));
 }
 
 describe("contact-interest acknowledgement behavior", () => {
@@ -75,7 +75,7 @@ describe("contact-interest acknowledgement behavior", () => {
     fireEvent.click(screen.getByRole("button", { name: "Submit interest" }));
     expect(screen.getByRole("alert")).toHaveTextContent("Contact consent is required");
 
-    fireEvent.click(screen.getByLabelText(/I agree that the Memolens team may store/i));
+    fireEvent.click(screen.getByLabelText(/I agree that the Memolenz team may store/i));
     fireEvent.click(screen.getByRole("button", { name: "Submit interest" }));
     await waitFor(() => expect(screen.getByRole("button", { name: "Retry submission" })).toBeVisible());
     expect(screen.getByRole("alert")).toHaveTextContent("could not confirm");

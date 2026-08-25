@@ -154,7 +154,7 @@ export function PreorderDialog({ sourceCta, onClose }: PreorderDialogProps) {
             <h2 id="preorder-title">Pre-order interest</h2>
             <p className="dialog-intro">
               Share your details if you would like to hear about supervised prototype tests,
-              pilots, or Memolens product updates.
+              pilots, or Memolenz product updates.
             </p>
             <form className="form-stack" onSubmit={submit} noValidate>
               <div className="field">
@@ -225,7 +225,7 @@ export function PreorderDialog({ sourceCta, onClose }: PreorderDialogProps) {
                   required
                 />
                 <span>
-                  I agree that the Memolens team may store this information and contact me
+                  I agree that the Memolenz team may store this information and contact me
                   about prototype testing, pilots, or product updates.
                 </span>
               </label>

@@ -289,7 +289,7 @@ function LoginPanel({
           <LockKeyhole size={26} />
         </div>
         <p className="eyebrow">Private founder workspace</p>
-        <h1>Memolens Learning Dashboard</h1>
+        <h1>Memolenz Learning Dashboard</h1>
         <p className="kpi-login-copy">
           Research KPIs, testing quality, customer signals, and controlled data exports.
         </p>
@@ -481,7 +481,7 @@ export function KpiPage() {
           <div>
             <div className="kpi-brand-line">
               <span className="kpi-brand-badge"><Sparkles size={16} /></span>
-              <span>Memolens</span>
+              <span>Memolenz</span>
               <span className="kpi-private-chip">Private</span>
             </div>
             <h1>Learning & KPI Dashboard</h1>
@@ -633,7 +633,7 @@ export function KpiPage() {
         </section>
 
         <section className="kpi-grid-two kpi-section-space">
-          <ChoiceBars title="Would consider using Memolens" data={summary.choices.would_consider_use} />
+          <ChoiceBars title="Would consider using Memolenz" data={summary.choices.would_consider_use} />
           <ChoiceBars title="Interested in a future pilot" data={summary.choices.pilot_interest} />
         </section>
 
@@ -796,7 +796,7 @@ export function KpiPage() {
         </section>
 
         <footer className="kpi-footer">
-          <p>Memolens supervised research prototype · Private founder/research dashboard</p>
+          <p>Memolenz supervised research prototype · Private founder/research dashboard</p>
           <p>Generated from current Supabase records. Refresh or export to retrieve the latest available data.</p>
         </footer>
       </main>

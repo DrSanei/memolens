@@ -20,7 +20,7 @@ describe("private KPI dashboard", () => {
     render(<KpiPage />);
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Memolens Learning Dashboard" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Memolenz Learning Dashboard" })).toBeInTheDocument();
     });
     expect(screen.getByLabelText("Dashboard password")).toHaveAttribute("type", "password");
   });

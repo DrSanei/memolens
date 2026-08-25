@@ -55,7 +55,7 @@ describe("landing CTAs and analytics consent", () => {
     fireEvent.click(screen.getByRole("button", { name: "Continue without analytics" }));
     fireEvent.click(document.getElementById("hero_test_memolens") as HTMLButtonElement);
 
-    await screen.findByRole("heading", { name: "Before you test Memolens" });
+    await screen.findByRole("heading", { name: "Before you test Memolenz" });
     expect(researchLogger.inspectQueueForTests()).toHaveLength(0);
     expect(fetchMock).not.toHaveBeenCalled();
   });

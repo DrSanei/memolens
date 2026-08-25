@@ -27,7 +27,7 @@ export function PrivacyPage() {
           <p className="eyebrow">Prototype privacy</p>
           <h1>What stays here, and what may be sent.</h1>
           <p>
-            Memolens deliberately separates short-lived recording evidence from optional,
+            Memolenz deliberately separates short-lived recording evidence from optional,
             structured research data.
           </p>
         </div>
@@ -56,7 +56,7 @@ export function PrivacyPage() {
               <Database size={25} />
             </span>
             <p className="eyebrow">Only with consent</p>
-            <h2>Anonymous test data may be sent to help us evaluate and improve Memolens.</h2>
+            <h2>Anonymous test data may be sent to help us evaluate and improve Memolenz.</h2>
             <ul className="check-list">
               <li>Page, CTA, and workflow events from an anonymous session</li>
               <li>Coarse device, browser, operating-system, and permission results</li>
@@ -83,7 +83,7 @@ export function PrivacyPage() {
         <section className="prototype-boundary-inline">
           <p>{PRODUCT_BOUNDARY}</p>
           <p>
-            The private Supabase project should be accessible only to authorized Memolens
+            The private Supabase project should be accessible only to authorized Memolenz
             team members. Public browser credentials cannot read research records. This
             demonstration does not claim clinical validation, regulatory clearance, or
             production-grade medical compliance.
