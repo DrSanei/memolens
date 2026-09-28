@@ -152,6 +152,39 @@ h1, h2, h3 { letter-spacing: -0.025em; line-height: 1.12; }
 }
 .note-a { top: 78px; left: 2px; }
 .note-b { right: 0; bottom: 86px; }
+.intro-video-section { padding: 80px 0 88px; background: #f2f6f2; }
+.intro-video-inner { display: grid; justify-items: center; }
+.intro-video-heading { margin-bottom: 30px; text-align: center; }
+.intro-video-heading h2 {
+  margin-bottom: 16px; font-family: Georgia,"Times New Roman",serif;
+  font-size: clamp(2.3rem,7vw,3.7rem); font-weight: 500;
+}
+.intro-video-heading p:last-child { max-width: 650px; margin: 0 auto; color: var(--muted); }
+.intro-video-player {
+  display: block; width: min(100%, 920px); height: auto; aspect-ratio: 16 / 9;
+  border-radius: var(--radius-lg); background: var(--ink);
+  box-shadow: var(--soft-shadow); object-fit: cover;
+}
+.intro-video-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 26px; }
+.intro-availability { width: min(100%, 740px); scroll-margin-top: 90px; margin-top: 26px; }
+.intro-availability-form, .intro-availability-success {
+  display: grid; gap: 16px; padding: clamp(22px,4vw,36px);
+  border: 1px solid var(--line); border-radius: var(--radius-lg);
+  background: var(--white); box-shadow: var(--card-shadow);
+}
+.intro-availability-form h3, .intro-availability-success h3 { margin: 0; font-size: 1.4rem; }
+.intro-availability-form > p, .intro-availability-success p { margin: 0; color: var(--muted); }
+.intro-availability-form .microcopy { font-size: .8rem; }
+.intro-availability-fields { display: grid; gap: 16px; }
+.intro-availability-phone-inputs { display: grid; grid-template-columns: 92px minmax(0,1fr); gap: 10px; }
+.intro-availability-phone-inputs input { min-width: 0; }
+.intro-availability-form .check-row { align-items: flex-start; }
+.intro-availability-form .button { justify-self: start; }
+@media (max-width: 520px) {
+  .intro-video-section { padding: 64px 0; }
+  .intro-video-actions { width: 100%; flex-direction: column; }
+  .intro-video-actions .button, .intro-availability-form .button { width: 100%; }
+}
 .steps-section { scroll-margin-top: 90px; padding: 88px 0; background: var(--white); }
 .section-heading { max-width: 750px; margin-bottom: 40px; }
 .section-heading h2, .boundary-copy h2, .final-cta-card h2 {

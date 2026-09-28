@@ -18,6 +18,7 @@ import {
 import { researchLogger } from "../../services/researchLogger";
 import { getNextScheduledDate } from "../../services/schedule";
 import type { CaptureStatus, MedicationEvent } from "../../types";
+import { createUuid } from "../../utils/uuid";
 
 interface CareRecipientExperienceProps {
   stream: MediaStream | null;
@@ -76,7 +77,7 @@ export function CareRecipientExperience({
       clearTimers();
       const now = new Date().toISOString();
       const event: MedicationEvent = {
-        id: crypto.randomUUID(),
+        id: createUuid(),
         routineId: activeRoutine.id,
         routineLabel: activeRoutine.label,
         scheduledAt: targetTime.toISOString(),
@@ -139,7 +140,7 @@ export function CareRecipientExperience({
             ? "capture_incomplete"
             : "evidence_available";
         const event: MedicationEvent = {
-          id: crypto.randomUUID(),
+          id: createUuid(),
           routineId: activeRoutine.id,
           routineLabel: activeRoutine.label,
           scheduledAt: targetTime.toISOString(),

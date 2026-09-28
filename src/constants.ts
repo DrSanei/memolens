@@ -5,6 +5,7 @@ import type {
   Routine,
   WorkflowStep,
 } from "./types";
+import { createUuid } from "./utils/uuid";
 
 export const SCHEMA_VERSION = "1.0";
 export const ANALYTICS_CONSENT_VERSION = "2026-08-16.v1";
@@ -44,8 +45,7 @@ export function createAnonymousTestCode(): string {
     String(now.getDate()).padStart(2, "0"),
   ].join("");
 
-  const randomPart = crypto
-    .randomUUID()
+  const randomPart = createUuid()
     .replaceAll("-", "")
     .slice(0, 8)
     .toUpperCase();
@@ -55,7 +55,7 @@ export function createAnonymousTestCode(): string {
 
 export function createDefaultRoutine(index = 1): Routine {
   return {
-    id: crypto.randomUUID(),
+    id: createUuid(),
     label: index === 1 ? "Morning medication routine" : `Medication routine ${index}`,
     scheduledTime: defaultScheduledTime(),
     scheduleMode: "every_day",
