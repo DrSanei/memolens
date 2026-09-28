@@ -32,6 +32,7 @@ import type {
   Routine,
   VideoReviewStatus,
 } from "../../types";
+import { createUuid } from "../../utils/uuid";
 
 interface CaregiverReviewProps {
   onDeleteEvent: (event: MedicationEvent) => void;
@@ -242,7 +243,7 @@ export function CaregiverReview({ onDeleteEvent, onClearSession }: CaregiverRevi
   const [feedbackStatus, setFeedbackStatus] = useState<FeedbackSaveStatus>("idle");
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const feedbackStartedAtRef = useRef(0);
-  const feedbackLeadIdRef = useRef(crypto.randomUUID());
+  const feedbackLeadIdRef = useRef(createUuid());
 
   const updateVideoStatus = (event: MedicationEvent, status: VideoReviewStatus) => {
     const currentRank = { not_reviewed: 0, started: 1, skipped: 2, completed: 3 }[

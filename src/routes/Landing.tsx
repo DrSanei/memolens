@@ -12,6 +12,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AnalyticsConsentChoice } from "../components/AnalyticsConsent";
+import { AvailabilityForm } from "../components/AvailabilityForm";
 import { Brand } from "../components/Brand";
 import { PreorderDialog } from "../components/PreorderDialog";
 import { PRODUCT_BOUNDARY } from "../constants";
@@ -45,6 +46,7 @@ export function LandingPage() {
   const heroRef = useRef<HTMLElement>(null);
   const howItWorksRef = useRef<HTMLElement>(null);
   const [showSticky, setShowSticky] = useState(false);
+  const [availabilityOpen, setAvailabilityOpen] = useState(false);
   const [preorderSource, setPreorderSource] = useState<string | null>(null);
 
   useEffect(() => {
@@ -82,6 +84,16 @@ export function LandingPage() {
       source: "landing",
     });
     howItWorksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const openAvailability = () => {
+    if (!availabilityOpen) {
+      researchLogger.log("preorder_opened", {
+        ctaId: "intro_video_notify",
+        source: "landing",
+      });
+      setAvailabilityOpen(true);
+    }
   };
 
   return (
@@ -169,6 +181,57 @@ export function LandingPage() {
               <div className="floating-note note-a">Gentle prompt</div>
               <div className="floating-note note-b">Private Memo</div>
             </div>
+          </div>
+        </section>
+
+        <section className="intro-video-section" aria-labelledby="intro-video-title">
+          <div className="container intro-video-inner">
+            <div className="section-heading intro-video-heading">
+              <p className="eyebrow">Meet Memolenz</p>
+              <h2 id="intro-video-title">What is Memolenz?</h2>
+              <p>
+                See how Memolenz is designed to provide real-time memory and safety support
+                while keeping caregivers connected.
+              </p>
+            </div>
+            <video
+              className="intro-video-player"
+              controls
+              playsInline
+              preload="none"
+              poster="/video/memolenz-intro-poster.webp"
+              width="1280"
+              height="720"
+              aria-label="What is Memolenz? A 90-second introduction video"
+            >
+              <source src="/video/Memolenz_Web_720p.mp4" type="video/mp4" />
+              Your browser does not support this video.
+            </video>
+            <div className="intro-video-actions">
+              <button
+                id="intro_test_memolenz"
+                className="button button-secondary"
+                type="button"
+                onClick={() => openTest("intro_test_memolenz")}
+              >
+                Test the Prototype <ArrowRight size={18} aria-hidden="true" />
+              </button>
+              <button
+                id="intro_video_notify"
+                className="button button-primary"
+                type="button"
+                aria-expanded={availabilityOpen}
+                aria-controls="intro-availability-form"
+                onClick={openAvailability}
+              >
+                Notify Me When Available
+              </button>
+            </div>
+            {availabilityOpen ? (
+              <div id="intro-availability-form" className="intro-availability">
+                <AvailabilityForm />
+              </div>
+            ) : null}
           </div>
         </section>
 

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { CONTACT_CONSENT_VERSION, SCHEMA_VERSION } from "../constants";
 import { useMemolens } from "../state/context";
 import { researchLogger, type LeadRecord } from "../services/researchLogger";
+import { createUuid } from "../utils/uuid";
 
 interface PreorderDialogProps {
   sourceCta: string;
@@ -83,7 +84,7 @@ export function PreorderDialog({ sourceCta, onClose }: PreorderDialogProps) {
 
     const lead: LeadRecord = {
       schema_version: SCHEMA_VERSION,
-      lead_id: crypto.randomUUID(),
+      lead_id: createUuid(),
       submitted_at_utc: new Date().toISOString(),
       name: name.trim().slice(0, 100),
       phone_country_code: normalizedCode,
