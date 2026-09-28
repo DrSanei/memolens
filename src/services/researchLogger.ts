@@ -262,7 +262,7 @@ class ResearchLogger {
   async submitLead(
       lead: LeadRecord,
       context: { honeypot: string; elapsedMs: number },
-      analyticsSource: "preorder_form" | "post_test_feedback" = "preorder_form",
+      analyticsSource: "preorder_form" | "post_test_feedback" | "careers_form" = "preorder_form",
     ): Promise<SupabaseAcknowledgement> {
       if (context.honeypot.trim()) throw new Error("lead_honeypot_rejected");
       if (!Number.isFinite(context.elapsedMs) || context.elapsedMs < 1_200) {
@@ -277,7 +277,7 @@ class ResearchLogger {
           },
         }),
       );
-      if (this.consent === "allowed") {
+      if (this.consent === "allowed" && analyticsSource !== "careers_form") {
         this.log(
           analyticsSource === "post_test_feedback"
             ? "post_test_lead_submitted"

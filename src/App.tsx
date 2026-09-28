@@ -8,6 +8,8 @@ import {
 } from "react-router-dom";
 import { LandingPage } from "./routes/Landing";
 import { PrivacyPage } from "./routes/Privacy";
+import { AboutPage } from "./routes/About";
+import { CareersPage } from "./routes/Careers";
 import { TestPage } from "./routes/Test";
 import { KpiPage } from "./routes/Kpi";
 import { MemolensProvider, useMemolens } from "./state/context";
@@ -56,6 +58,8 @@ function AppRoutes() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/test" element={<TestPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/careers" element={<CareersPage />} />
         <Route path="/kpi" element={<KpiPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

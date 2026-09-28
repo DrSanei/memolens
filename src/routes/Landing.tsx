@@ -10,10 +10,11 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { AnalyticsConsentChoice } from "../components/AnalyticsConsent";
 import { AvailabilityForm } from "../components/AvailabilityForm";
-import { Brand } from "../components/Brand";
+import { SiteHeader } from "../components/SiteHeader";
+import { SiteFooter } from "../components/SiteFooter";
 import { PreorderDialog } from "../components/PreorderDialog";
 import { PRODUCT_BOUNDARY } from "../constants";
 import { useMemolens } from "../state/context";
@@ -42,6 +43,7 @@ const STEPS = [
 
 export function LandingPage() {
   const navigate = useNavigate();
+  const { hash } = useLocation();
   const { dispatch } = useMemolens();
   const heroRef = useRef<HTMLElement>(null);
   const howItWorksRef = useRef<HTMLElement>(null);
@@ -52,6 +54,11 @@ export function LandingPage() {
   useEffect(() => {
     researchLogger.logViewOnce("landing:/", "landing_viewed", { source: "direct_or_navigation" });
   }, []);
+
+  useEffect(() => {
+    if (hash !== "#how-it-works") return;
+    howItWorksRef.current?.scrollIntoView?.({ block: "start" });
+  }, [hash]);
 
   useEffect(() => {
     const hero = heroRef.current;
@@ -83,7 +90,7 @@ export function LandingPage() {
       ctaId: "hero_see_how_it_works",
       source: "landing",
     });
-    howItWorksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    howItWorksRef.current?.scrollIntoView?.({ behavior: "smooth", block: "start" });
   };
 
   const openAvailability = () => {
@@ -98,19 +105,7 @@ export function LandingPage() {
 
   return (
     <div className="site-shell">
-      <header className="landing-header">
-        <div className="container header-inner">
-          <Brand />
-          <nav aria-label="Primary navigation">
-            <button className="nav-link" type="button" onClick={scrollToHowItWorks}>
-              How it works
-            </button>
-            <Link className="nav-link" to="/privacy">
-              Privacy
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <SiteHeader home onHowItWorks={scrollToHowItWorks} />
 
       <main>
         <section ref={heroRef} className="hero-section">
@@ -310,13 +305,7 @@ export function LandingPage() {
         </section>
       </main>
 
-      <footer className="site-footer">
-        <div className="container footer-inner">
-          <Brand compact />
-          <p>Supervised research prototype · Memos erased on refresh or close</p>
-          <Link to="/privacy">Privacy</Link>
-        </div>
-      </footer>
+      <SiteFooter />
 
       <AnalyticsConsentChoice />
 

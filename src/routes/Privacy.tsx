@@ -1,7 +1,7 @@
-import { ArrowLeft, Database, HardDrive, ShieldCheck } from "lucide-react";
+import { Database, HardDrive, ShieldCheck } from "lucide-react";
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Brand } from "../components/Brand";
+import { SiteFooter } from "../components/SiteFooter";
+import { SiteHeader } from "../components/SiteHeader";
 import { PRODUCT_BOUNDARY } from "../constants";
 import { researchLogger } from "../services/researchLogger";
 
@@ -14,14 +14,7 @@ export function PrivacyPage() {
 
   return (
     <div className="site-shell privacy-page">
-      <header className="simple-header">
-        <div className="container header-inner">
-          <Brand />
-          <Link className="button button-ghost button-small" to="/">
-            <ArrowLeft size={17} /> Back home
-          </Link>
-        </div>
-      </header>
+      <SiteHeader />
       <main className="container privacy-main">
         <div className="privacy-intro">
           <p className="eyebrow">Prototype privacy</p>
@@ -61,7 +54,7 @@ export function PrivacyPage() {
               <li>Page, CTA, and workflow events from an anonymous session</li>
               <li>Coarse device, browser, operating-system, and permission results</li>
               <li>Timing, Memo outcome, review outcome, and test ratings</li>
-              <li>Voluntary contact details under separate contact consent</li>
+              <li>Voluntary product or team interest details under separate contact consent</li>
             </ul>
             <p className="notice-soft">
               Anonymous analytics can be declined without reducing product functionality.
@@ -90,6 +83,7 @@ export function PrivacyPage() {
           </p>
         </section>
       </main>
+      <SiteFooter />
     </div>
   );
 }
